@@ -1,6 +1,6 @@
 {
   "name": "internationalized-color",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Internationalized color library with locale-aware naming across languages and cultures",
   "module": "index.ts",
   "type": "module",
@@ -92,14 +92,38 @@
   },
   "keywords": [
     "color",
+    "colors",
+    "colour",
     "i18n",
+    "l10n",
     "internationalization",
     "localization",
     "color-naming",
+    "color-name",
+    "color-names",
+    "named-colors",
     "multilingual",
+    "translation",
+    "locale",
     "oklab",
-    "culori"
+    "perceptual",
+    "nearest-neighbor",
+    "kd-tree",
+    "culori",
+    "css-colors",
+    "berlin-kay",
+    "color-space",
+    "color-conversion",
+    "tree-shakeable"
   ],
+  "homepage": "https://github.com/GrandMagus02/internationalized-color#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GrandMagus02/internationalized-color.git"
+  },
+  "bugs": {
+    "url": "https://github.com/GrandMagus02/internationalized-color/issues"
+  },
   "license": "MIT",
   "devDependencies": {
     "@types/bun": "latest"
