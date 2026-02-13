@@ -5,25 +5,101 @@ Locale-aware color naming across 74 languages using OkLab color space and k-d tr
 ## Install
 
 ```bash
-bun install
+npm install internationalized-color
+```
+
+```bash
+pnpm add internationalized-color
+```
+
+```bash
+yarn add internationalized-color
+```
+
+```bash
+bun add internationalized-color
 ```
 
 ## Usage
 
+Register color spaces first, then load any locales you need:
+
 ```ts
+import 'internationalized-color/css'; // registers all CSS Color Level 4 spaces
 import { Color, ColorNamer } from 'internationalized-color';
 import { en } from 'internationalized-color/locales/en';
 import { ar } from 'internationalized-color/locales/ar';
 import { ja } from 'internationalized-color/locales/ja';
 
-const namer = new ColorNamer(en, ar, ja);
+const namer = new ColorNamer([en, ar, ja]);
 const color = Color.parse('#ff6347');
 
 // Name a color in English
-namer.name(color, 'en');
+namer.name(color, 'en'); // → "tomato"
+
+// Name the same color in Japanese
+namer.name(color, 'ja'); // → "朱色"
+
+// Name at the basic (Berlin-Kay 11) tier only
+namer.name(color, 'en', { level: 'basic' }); // → "red"
 
 // Translate a color name across languages
-namer.translate('red', 'en', 'ar');
+namer.translate('red', 'en', 'ar'); // → "أحمر"
+namer.translate('red', 'en', 'ja'); // → "赤"
+namer.translate('blue', 'en', 'fr'); // → "bleu roi"
+
+// Find the N closest named colors
+namer.nearest(color, 'en', 3); // → ["tomato", "orangered", "coral"]
+```
+
+### Color formats
+
+Powered by [culori](https://culorijs.org/), any CSS Color Level 4 format is supported:
+
+```ts
+import 'internationalized-color/css';
+import { Color } from 'internationalized-color';
+
+// Hex
+Color.parse('#ff6347');
+
+// CSS named colors
+Color.parse('tomato');
+
+// RGB
+Color.parse('rgb(255, 99, 71)');
+
+// HSL
+Color.parse('hsl(9, 100%, 64%)');
+
+// HWB
+Color.parse('hwb(9 28% 0%)');
+
+// OkLab
+Color.parse('oklab(0.7 0.1 0.1)');
+
+// OkLCH
+Color.parse('oklch(0.7 0.15 50)');
+
+// Lab
+Color.parse('lab(62 45 47)');
+
+// LCH
+Color.parse('lch(62 65 46)');
+
+// Display P3
+Color.parse('color(display-p3 1 0.39 0.28)');
+```
+
+### Tree-shakeable setup
+
+If you don't need all CSS color spaces, register only what you use:
+
+```ts
+import { setup, Color } from 'internationalized-color';
+import { modeRgb, modeOklab, modeOklch } from 'culori/fn';
+
+setup([modeRgb, modeOklab, modeOklch]);
 ```
 
 ## Supported Languages
