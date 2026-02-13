@@ -124,9 +124,20 @@
   "bugs": {
     "url": "https://github.com/GrandMagus02/internationalized-color/issues"
   },
+  "size-limit": [
+    {
+      "name": "Everything (core + all locales + CSS bootstrap + dependencies)",
+      "path": ["index.ts", "src/bootstrap/css.ts", "src/locales/index.ts"],
+      "limit": "215 KB"
+    }
+  ],
   "license": "MIT",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@size-limit/esbuild": "^12.0.0",
+    "@size-limit/esbuild-why": "^12.0.0",
+    "@size-limit/file": "^12.0.0",
+    "@types/bun": "latest",
+    "size-limit": "^12.0.0"
   },
   "peerDependencies": {
     "typescript": "^5"
