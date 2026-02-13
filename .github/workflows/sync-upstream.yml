@@ -1,0 +1,78 @@
+name: Sync upstream color data
+
+on:
+  schedule:
+    # Run daily at 06:00 UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Clone upstream dataset
+        run: git clone --depth 1 https://github.com/uwdata/color-naming-in-different-languages.git /tmp/uwdata-colors
+
+      - name: Get upstream commit SHA
+        id: upstream
+        run: echo "sha=$(git -C /tmp/uwdata-colors rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Check last synced SHA
+        id: check
+        run: |
+          LAST_SHA=""
+          if [ -f .upstream-sha ]; then
+            LAST_SHA=$(cat .upstream-sha)
+          fi
+          echo "last_sha=$LAST_SHA" >> "$GITHUB_OUTPUT"
+          if [ "$LAST_SHA" = "${{ steps.upstream.outputs.sha }}" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Regenerate locale data
+        if: steps.check.outputs.changed == 'true'
+        run: bun scripts/generate-locales.ts /tmp/uwdata-colors/model/cleaned_color_data_by_lang
+
+      - name: Compute OkLab centroids
+        if: steps.check.outputs.changed == 'true'
+        run: bun scripts/compute-oklab.ts
+
+      - name: Run tests
+        if: steps.check.outputs.changed == 'true'
+        run: bun test
+
+      - name: Save upstream SHA
+        if: steps.check.outputs.changed == 'true'
+        run: echo "${{ steps.upstream.outputs.sha }}" > .upstream-sha
+
+      - name: Commit and push
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No file changes to commit"
+          else
+            git commit -m "chore: sync locale data from upstream uwdata dataset
+
+          Upstream commit: uwdata/color-naming-in-different-languages@${{ steps.upstream.outputs.sha }}"
+            git push
+          fi
