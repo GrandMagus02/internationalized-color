@@ -1,10 +1,14 @@
 import { test, expect, describe, beforeAll } from 'bun:test';
-import { Color, ColorNamer, setup } from '../index.ts';
+import { Color, ColorNamer } from '../index.ts';
 import { en } from '../src/locales/en.ts';
-import { modeRgb, modeOklab, modeOklch, modeHsl, modeLrgb } from 'culori/fn';
+import { modeRgb, modeOklab, modeOklch, modeHsl, modeLrgb, useMode } from 'culori/fn';
 
 beforeAll(() => {
-  setup([modeRgb, modeOklab, modeOklch, modeHsl, modeLrgb]);
+  const modes = [modeRgb, modeOklab, modeOklch, modeHsl, modeLrgb];
+  
+  for (const mode of modes) {
+    useMode(mode as any);
+  }
 });
 
 describe('ColorNamer', () => {

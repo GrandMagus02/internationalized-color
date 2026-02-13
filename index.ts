@@ -1,9 +1,8 @@
+export type { CuloriColor, ModeDefinition } from 'culori/fn';
 export { Color } from './src/Color.ts';
 export { ColorNamer } from './src/naming.ts';
-export { setup } from './src/setup.ts';
 export type {
-  CuloriColor,
-  ModeDefinition,
+  ExtendedModeDefinition,
   ColorDictionary,
   ColorNameSet,
   ColorName,

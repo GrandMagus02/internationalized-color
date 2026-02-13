@@ -1,5 +1,5 @@
 import { test, expect, describe, beforeAll } from 'bun:test';
-import { Color, setup } from '../index.ts';
+import { Color } from '../index.ts';
 import {
   modeRgb,
   modeOklab,
@@ -10,10 +10,25 @@ import {
   modeLch,
   modeP3,
   modeLrgb,
+  useMode,
 } from 'culori/fn';
 
 beforeAll(() => {
-  setup([modeRgb, modeOklab, modeOklch, modeHsl, modeHwb, modeLab, modeLch, modeP3, modeLrgb]);
+  const modes = [
+    modeRgb,
+    modeHsl,
+    modeHwb,
+    modeLab,
+    modeLch,
+    modeOklab,
+    modeOklch,
+    modeP3,
+    modeLrgb,
+  ];
+  
+  for (const mode of modes) {
+    useMode(mode as any);
+  }
 });
 
 describe('Color.parse', () => {
@@ -232,11 +247,190 @@ describe('Channel access', () => {
     expect(c.get('h')).toBeUndefined();
   });
 
+  test('get() returns default value when channel does not exist', () => {
+    const c = Color.create('rgb', { r: 1, g: 0, b: 0 });
+    expect(c.get('h', 0)).toBe(0);
+    expect(c.get('h', -1)).toBe(-1);
+  });
+
+  test('get() returns actual value over default when channel exists', () => {
+    const c = Color.create('oklch', { l: 0.7, c: 0.15, h: 180 });
+    expect(c.get('l', 0)).toBe(0.7);
+  });
+
   test('set() updates channels', () => {
     const c = Color.create('oklch', { l: 0.7, c: 0.15, h: 180 });
     const darker = c.set({ l: 0.4 });
     expect(darker.get('l')).toBe(0.4);
     expect(darker.get('c')).toBe(0.15); // unchanged
     expect(darker.get('h')).toBe(180); // unchanged
+  });
+});
+
+describe('Channel introspection', () => {
+  test('channels getter returns mode channels (excludes alpha)', () => {
+    const c = Color.create('rgb', { r: 1, g: 0, b: 0 });
+    expect(c.channels).toEqual(['r', 'g', 'b']);
+  });
+
+  test('channels getter for oklch', () => {
+    const c = Color.create('oklch', { l: 0.7, c: 0.15, h: 180 });
+    expect(c.channels).toEqual(['l', 'c', 'h']);
+  });
+
+  test('has() returns true for existing channels', () => {
+    const c = Color.create('rgb', { r: 1, g: 0, b: 0 });
+    expect(c.has('r')).toBe(true);
+    expect(c.has('g')).toBe(true);
+    expect(c.has('b')).toBe(true);
+  });
+
+  test('has() returns false for non-existent channels', () => {
+    const c = Color.create('rgb', { r: 1, g: 0, b: 0 });
+    expect(c.has('h')).toBe(false);
+    expect(c.has('l')).toBe(false);
+  });
+
+  test('entries() returns channel-value pairs', () => {
+    const c = Color.create('rgb', { r: 1, g: 0.5, b: 0 });
+    const entries = c.entries();
+    expect(entries).toEqual([
+      ['r', 1],
+      ['g', 0.5],
+      ['b', 0],
+    ]);
+  });
+
+  test('entries() excludes mode and alpha', () => {
+    const c = Color.create('rgb', { r: 1, g: 0, b: 0 }, 0.5);
+    const entries = c.entries();
+    const keys = entries.map(([k]) => k);
+    expect(keys).not.toContain('mode');
+    expect(keys).not.toContain('alpha');
+  });
+
+  test('getRange() returns min/max for a channel', () => {
+    const c = Color.create('oklch', { l: 0.7, c: 0.15, h: 180 });
+    const range = c.getRange('l');
+    expect(range).toBeDefined();
+    expect(range![0]).toBe(0);
+    expect(range![1]).toBe(1);
+  });
+
+  test('getRange() returns undefined for unknown channel', () => {
+    const c = Color.create('rgb', { r: 1, g: 0, b: 0 });
+    expect(c.getRange('z')).toBeUndefined();
+  });
+});
+
+describe('Color.from', () => {
+  test('accepts a string', () => {
+    const c = Color.from('#ff0000');
+    expect(c.mode).toBe('rgb');
+    expect(c.get('r')).toBeCloseTo(1, 5);
+  });
+
+  test('accepts a Color instance (returns same instance)', () => {
+    const original = Color.hex('#ff0000');
+    const c = Color.from(original);
+    expect(c).toBe(original);
+  });
+
+  test('accepts a culori color object', () => {
+    const c = Color.from({ mode: 'rgb', r: 1, g: 0, b: 0 });
+    expect(c.mode).toBe('rgb');
+    expect(c.get('r')).toBeCloseTo(1, 5);
+  });
+});
+
+describe('mix', () => {
+  test('mixes two colors at 50% by default', () => {
+    const red = Color.hex('#ff0000');
+    const blue = Color.hex('#0000ff');
+    const mixed = red.mix(blue);
+    // Should be somewhere between red and blue
+    expect(mixed.mode).toBe('rgb');
+    expect(mixed.get('r')!).toBeGreaterThan(0);
+    expect(mixed.get('b')!).toBeGreaterThan(0);
+  });
+
+  test('mix at 0 returns the original color', () => {
+    const red = Color.hex('#ff0000');
+    const blue = Color.hex('#0000ff');
+    const mixed = red.mix(blue, 0);
+    expect(mixed.get('r')).toBeCloseTo(1, 2);
+    expect(mixed.get('b')).toBeCloseTo(0, 2);
+  });
+
+  test('mix at 1 returns the other color', () => {
+    const red = Color.hex('#ff0000');
+    const blue = Color.hex('#0000ff');
+    const mixed = red.mix(blue, 1);
+    expect(mixed.get('r')).toBeCloseTo(0, 2);
+    expect(mixed.get('b')).toBeCloseTo(1, 2);
+  });
+
+  test('mix accepts a string for the other color', () => {
+    const red = Color.hex('#ff0000');
+    const mixed = red.mix('#0000ff', 0.5);
+    expect(mixed.get('r')!).toBeGreaterThan(0);
+    expect(mixed.get('b')!).toBeGreaterThan(0);
+  });
+
+  test('mix returns result in original color mode', () => {
+    const c = Color.parse('oklch(70% 0.15 180)');
+    const mixed = c.mix('#ff0000');
+    expect(mixed.mode).toBe('oklch');
+  });
+});
+
+describe('lighten and darken', () => {
+  test('lighten() increases lightness', () => {
+    const c = Color.hex('#888888');
+    const lighter = c.lighten();
+    const origL = c.toOklab().get('l')!;
+    const newL = lighter.toOklab().get('l')!;
+    expect(newL).toBeGreaterThan(origL);
+  });
+
+  test('darken() decreases lightness', () => {
+    const c = Color.hex('#888888');
+    const darker = c.darken();
+    const origL = c.toOklab().get('l')!;
+    const newL = darker.toOklab().get('l')!;
+    expect(newL).toBeLessThan(origL);
+  });
+
+  test('lighten() returns same mode as original', () => {
+    const c = Color.hex('#ff0000');
+    expect(c.lighten().mode).toBe('rgb');
+  });
+
+  test('darken() returns same mode as original', () => {
+    const c = Color.hex('#ff0000');
+    expect(c.darken().mode).toBe('rgb');
+  });
+
+  test('lighten() clamps to 1', () => {
+    const c = Color.hex('#ffffff');
+    const lighter = c.lighten(0.5);
+    const l = lighter.toOklab().get('l')!;
+    expect(l).toBeLessThanOrEqual(1);
+  });
+
+  test('darken() clamps to 0', () => {
+    const c = Color.hex('#000000');
+    const darker = c.darken(0.5);
+    const l = darker.toOklab().get('l')!;
+    expect(l).toBeGreaterThanOrEqual(0);
+  });
+
+  test('lighten() with custom amount', () => {
+    const c = Color.hex('#888888');
+    const a = c.lighten(0.05);
+    const b = c.lighten(0.2);
+    const aL = a.toOklab().get('l')!;
+    const bL = b.toOklab().get('l')!;
+    expect(bL).toBeGreaterThan(aL);
   });
 });

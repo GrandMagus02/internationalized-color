@@ -4,8 +4,11 @@ import {
   formatCss,
   formatHex,
   toGamut,
+  getMode,
+  interpolate,
+  type CuloriColor,
 } from 'culori/fn';
-import type { CuloriColor } from './types.ts';
+import type { ExtendedModeDefinition } from './types.ts';
 
 /**
  * Immutable color value object wrapping a culori color.
@@ -29,9 +32,11 @@ export class Color {
   }
 
   /** Get a channel value by name (e.g. 'r', 'l', 'h'). */
-  get(channel: string): number | undefined {
+  get(channel: string): number | undefined;
+  get<T>(channel: string, defaultValue: T): number | T;
+  get(channel: string, defaultValue?: unknown): unknown {
     const val = this.#color[channel];
-    return typeof val === 'number' ? val : undefined;
+    return typeof val === 'number' ? val : defaultValue;
   }
 
   /** Create a new Color with modified channels. */
@@ -48,6 +53,33 @@ export class Color {
     return new Color({ ...this.#color, alpha });
   }
 
+  /** Channel names for this color's mode (excludes alpha). */
+  get channels(): string[] {
+    return getMode(this.#color.mode)?.channels.filter((c: string) => c !== 'alpha') ?? [];
+  }
+
+  /** Check if a channel exists on this color with a numeric value. */
+  has(channel: string): boolean {
+    return typeof this.#color[channel] === 'number';
+  }
+
+  /** Returns [channel, value] pairs for all defined channels (excludes mode and alpha). */
+  entries(): [string, number][] {
+    const result: [string, number][] = [];
+    for (const key of Object.keys(this.#color)) {
+      if (key !== 'mode' && key !== 'alpha') {
+        const val = this.#color[key];
+        if (typeof val === 'number') result.push([key, val]);
+      }
+    }
+    return result;
+  }
+
+  /** Returns [min, max] range for a channel from the mode definition. */
+  getRange(channel: string): [number, number] | undefined {
+    return (getMode(this.#color.mode) as ExtendedModeDefinition | undefined)?.ranges?.[channel];
+  }
+
   /** Convert to another color space. Returns a new Color. */
   to(mode: string): Color {
     const convert = converter(mode);
@@ -58,6 +90,45 @@ export class Color {
     return new Color(result);
   }
 
+  /** Mix with another color. Defaults to 50% blend in OkLab (perceptually uniform). */
+  mix(other: Color | string, amount = 0.5, mode = 'oklab'): Color {
+    const otherColor = typeof other === 'string' ? Color.parse(other) : other;
+    const interp = interpolate([this.#color as any, otherColor.#color as any], mode);
+    const result = interp(amount);
+    if (!result) {
+      throw new Error(`Cannot interpolate in mode "${mode}". Is it registered via setup()?`);
+    }
+    // Convert back to the original color's mode
+    if (result.mode !== this.#color.mode) {
+      const convert = converter(this.#color.mode);
+      const converted = convert(result);
+      if (converted) return new Color(converted);
+    }
+    return new Color(result);
+  }
+
+  /** Increase OkLab lightness by the given amount (default 0.1). Returns a new Color. */
+  lighten(amount = 0.1): Color {
+    const lab = this.toOklab();
+    const l = Math.min(1, (lab.get('l') ?? 0) + amount);
+    const adjusted = lab.set({ l });
+    if (this.#color.mode !== 'oklab') {
+      return adjusted.to(this.#color.mode);
+    }
+    return adjusted;
+  }
+
+  /** Decrease OkLab lightness by the given amount (default 0.1). Returns a new Color. */
+  darken(amount = 0.1): Color {
+    const lab = this.toOklab();
+    const l = Math.max(0, (lab.get('l') ?? 0) - amount);
+    const adjusted = lab.set({ l });
+    if (this.#color.mode !== 'oklab') {
+      return adjusted.to(this.#color.mode);
+    }
+    return adjusted;
+  }
+
   /** Get the raw culori color object (for interop with culori functions). */
   toObject(): CuloriColor {
     return { ...this.#color };
@@ -66,6 +137,71 @@ export class Color {
   /** Convert to OkLab. Shorthand for `this.to('oklab')`. */
   toOklab(): Color {
     return this.to('oklab');
+  }
+
+  /** Convert to OkLCH. Shorthand for `this.to('oklch')`. */
+  toOklch(): Color {
+    return this.to('oklch');
+  }
+
+  /** Convert to sRGB. Shorthand for `this.to('rgb')`. */
+  toRgb(): Color {
+    return this.to('rgb');
+  }
+
+  /** Convert to HSL. Shorthand for `this.to('hsl')`. */
+  toHsl(): Color {
+    return this.to('hsl');
+  }
+
+  /** Convert to HWB. Shorthand for `this.to('hwb')`. */
+  toHwb(): Color {
+    return this.to('hwb');
+  }
+
+  /** Convert to CIE Lab (D50). Shorthand for `this.to('lab')`. */
+  toLab(): Color {
+    return this.to('lab');
+  }
+
+  /** Convert to CIE LCH (D50). Shorthand for `this.to('lch')`. */
+  toLch(): Color {
+    return this.to('lch');
+  }
+
+  /** Convert to Display P3. Shorthand for `this.to('p3')`. */
+  toP3(): Color {
+    return this.to('p3');
+  }
+
+  /** Convert to A98 RGB. Shorthand for `this.to('a98')`. */
+  toA98(): Color {
+    return this.to('a98');
+  }
+
+  /** Convert to ProPhoto RGB. Shorthand for `this.to('prophoto')`. */
+  toProphoto(): Color {
+    return this.to('prophoto');
+  }
+
+  /** Convert to Rec. 2020. Shorthand for `this.to('rec2020')`. */
+  toRec2020(): Color {
+    return this.to('rec2020');
+  }
+
+  /** Convert to CIE XYZ (D50). Shorthand for `this.to('xyz50')`. */
+  toXyz50(): Color {
+    return this.to('xyz50');
+  }
+
+  /** Convert to CIE XYZ (D65). Shorthand for `this.to('xyz65')`. */
+  toXyz65(): Color {
+    return this.to('xyz65');
+  }
+
+  /** Convert to Linear sRGB. Shorthand for `this.to('lrgb')`. */
+  toLrgb(): Color {
+    return this.to('lrgb');
   }
 
   /** Perceptual distance (Euclidean in OkLab) to another color. */
@@ -142,6 +278,13 @@ export class Color {
       channels,
       ...(obj.alpha !== undefined ? { alpha: obj.alpha } : {}),
     };
+  }
+
+  /** Universal resolver: accepts a string, Color, or culori object. */
+  static from(value: string | Color | CuloriColor): Color {
+    if (value instanceof Color) return value;
+    if (typeof value === 'string') return Color.parse(value);
+    return new Color(value);
   }
 
   /** Parse a CSS color string. */

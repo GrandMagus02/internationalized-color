@@ -1,14 +1,9 @@
-/** A culori color object — plain object with a `mode` and channel properties. */
-export interface CuloriColor {
-  mode: string;
-  alpha?: number;
-  [channel: string]: number | string | undefined;
-}
+import type { CuloriColor, ModeDefinition } from "culori/fn";
+import type { Color } from "./Color.ts";
+
 
 /** A culori mode definition object. */
-export interface ModeDefinition {
-  mode: string;
-  channels: string[];
+export interface ExtendedModeDefinition extends ModeDefinition {
   parse?: unknown[];
   serialize?: string | ((color: CuloriColor) => string);
   interpolate?: Record<string, unknown>;
@@ -45,7 +40,7 @@ export interface ColorName {
   /** The color name in the locale's language. */
   name: string;
   /** The canonical OkLab centroid as a Color instance. */
-  color: import('./Color.ts').Color;
+  color: Color;
   /** Perceptual distance from the query color (Euclidean in OkLab). */
   distance: number;
   /** The dictionary source this name came from. */
@@ -67,9 +62,9 @@ export interface TranslationResult {
   /** Best matching name in the target locale. */
   name: string;
   /** The color associated with the source name. */
-  sourceColor: import('./Color.ts').Color;
+  sourceColor: Color;
   /** The color associated with the target name (nearest match). */
-  targetColor: import('./Color.ts').Color;
+  targetColor: Color;
   /** Perceptual distance between source and target centroids. */
   distance: number;
 }
