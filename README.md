@@ -93,13 +93,67 @@ Color.parse('color(display-p3 1 0.39 0.28)');
 
 ### Tree-shakeable setup
 
-If you don't need all CSS color spaces, register only what you use:
+If you don't need all CSS color spaces, register only what you use via culori's `useMode`:
 
 ```ts
-import { setup, Color } from 'internationalized-color';
-import { modeRgb, modeOklab, modeOklch } from 'culori/fn';
+import { useMode, modeRgb, modeOklab, modeOklch } from 'culori/fn';
+import { Color } from 'internationalized-color';
 
-setup([modeRgb, modeOklab, modeOklch]);
+useMode(modeRgb);
+useMode(modeOklab);
+useMode(modeOklch);
+```
+
+### Color manipulation
+
+The `Color` class is an immutable value object — every method returns a new instance.
+
+```ts
+import 'internationalized-color/css';
+import { Color } from 'internationalized-color';
+
+// Create colors
+const tomato = Color.parse('#ff6347');
+const sky = Color.from('oklch(0.75 0.15 230)');  // accepts string, Color, or culori object
+const custom = Color.create('rgb', { r: 0.5, g: 0.2, b: 0.8 });
+
+// Convert between color spaces
+const lab = tomato.toOklab();
+const lch = tomato.toOklch();
+const hsl = tomato.toHsl();
+const p3 = tomato.toP3();
+const generic = tomato.to('rec2020');  // any registered mode
+
+// Read channels
+tomato.mode;                   // → "rgb"
+tomato.get('r');               // → 1
+tomato.channels;               // → ["r", "g", "b"]
+tomato.entries();              // → [["r", 1], ["g", 0.388...], ["b", 0.278...]]
+tomato.has('r');               // → true
+
+// Modify channels (returns new Color)
+tomato.set({ r: 0.5 });
+tomato.withAlpha(0.8);
+
+// Mix colors (defaults to 50% blend in OkLab)
+tomato.mix(sky);               // perceptually uniform blend
+tomato.mix(sky, 0.25);         // 25% toward sky
+tomato.mix('#0000ff', 0.5, 'oklch');  // mix in OkLCH space
+
+// Lighten / darken (adjusts OkLab lightness)
+tomato.lighten(0.1);
+tomato.darken(0.2);
+
+// Perceptual distance & equality
+tomato.deltaE(sky);            // Euclidean distance in OkLab
+tomato.equals(sky);            // exact match
+tomato.equals(sky, 0.05);     // within perceptual tolerance
+
+// Serialize
+tomato.toString();             // → "color(srgb 1 0.38824 0.27843)"
+tomato.toHex();                // → "#ff6347"
+tomato.toJSON();               // → { mode: "rgb", channels: { r: 1, g: 0.388..., b: 0.278... } }
+tomato.toObject();             // raw culori color object
 ```
 
 ## Supported Languages
