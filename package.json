@@ -1,6 +1,6 @@
 {
   "name": "internationalized-color",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Internationalized color library with locale-aware naming across languages and cultures",
   "module": "index.ts",
   "type": "module",
