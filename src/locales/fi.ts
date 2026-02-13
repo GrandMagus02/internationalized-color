@@ -1,81 +1,81 @@
 import type { ColorDictionary } from '../types.ts';
 
+// Finnish (Suomi) — 1403 survey responses
 export const fi: ColorDictionary = {
   locale: 'fi',
-  source: 'uw+research',
+  source: 'uwdata-multilingual-colors',
   basic: {
     names: [
-      'musta',
-      'valkoinen',
-      'punainen',
-      'vihreä',
-      'keltainen',
       'sininen',
-      'ruskea',
+      'vihreä',
       'oranssi',
-      'pinkki',
       'violetti',
-      'harmaa',
+      'punainen',
+      'turkoosi',
+      'pinkki',
+      'vaaleansininen',
+      'keltainen',
+      'liila',
+      'tummansininen',
     ],
     colors: new Float32Array([
-      // musta
-      0, 0, 0,
-      // valkoinen
-      1, 0, 0,
-      // punainen
-      0.627955, 0.224863, 0.125846,
-      // vihreä
-      0.519752, -0.140302, 0.107676,
-      // keltainen
-      0.967983, -0.071369, 0.19857,
-      // sininen
-      0.452014, -0.032457, -0.311528,
-      // ruskea
-      0.470784, 0.070809, 0.08696,
-      // oranssi
-      0.792688, 0.056611, 0.161385,
-      // pinkki
-      0.867738, 0.07298, 0.009071,
-      // violetti
-      0.420914, 0.164704, -0.101472,
-      // harmaa
-      0.599871, 0, 0,
+      0.558574, -0.037908, -0.2105,
+      0.796616, -0.192791, 0.1448,
+      0.730043, 0.099942, 0.146424,
+      0.561078, 0.195961, -0.176571,
+      0.606683, 0.218545, 0.103045,
+      0.840496, -0.150765, -0.002334,
+      0.64607, 0.256468, -0.04079,
+      0.797696, -0.113734, -0.072838,
+      0.916787, -0.049682, 0.187363,
+      0.578624, 0.186704, -0.145707,
+      0.417845, -0.016938, -0.232231,
     ]),
   },
   extended: {
     names: [
-      'turkoosi',
-      'beige',
-      'laivastonsininen',
-      'kulta',
-      'hopea',
-      'viininpunainen',
-      'vaaleansininen',
-      'tummansininen',
       'vaaleanvihreä',
+      'ruskea',
+      'taivaansininen',
+      'magenta',
+      'purppura',
+      'lime',
+      'syaani',
+      'vaaleanpunainen',
+      'kirkkaanvihreä',
+      'mintunvihreä',
+      'musta',
+      'keltavihreä',
+      'fuksia',
       'tummanvihreä',
+      'harmaa',
+      'viininpunainen',
+      'metsänvihreä',
+      'limenvihreä',
+      'tummankeltainen',
+      'sinivihreä',
     ],
     colors: new Float32Array([
-      // turkoosi
-      0.822334, -0.130229, -0.011597,
-      // beige
-      0.963574, -0.009585, 0.031352,
-      // laivastonsininen
-      0.27115, -0.01947, -0.186877,
-      // kulta
-      0.886771, -0.016925, 0.181398,
-      // hopea
-      0.807796, 0, 0,
-      // viininpunainen
-      0.400779, 0.091534, 0.024679,
-      // vaaleansininen
-      0.814817, -0.057156, -0.05868,
-      // tummansininen
-      0.287824, -0.020667, -0.198369,
-      // vaaleanvihreä
-      0.868003, -0.126184, 0.091382,
-      // tummanvihreä
-      0.436018, -0.117699, 0.090329,
+      0.850604, -0.174056, 0.140815,
+      0.529822, 0.030641, 0.080897,
+      0.721666, -0.086004, -0.124867,
+      0.655322, 0.262072, -0.120385,
+      0.449663, 0.155008, -0.135446,
+      0.880384, -0.171096, 0.179544,
+      0.777081, -0.112539, -0.072728,
+      0.703226, 0.170031, -0.032559,
+      0.826832, -0.209979, 0.154735,
+      0.844414, -0.158763, 0.042464,
+      0.206655, 0.008248, -0.005578,
+      0.882036, -0.136232, 0.168732,
+      0.611798, 0.242287, -0.016426,
+      0.456383, -0.095858, 0.076326,
+      0.701747, -0.009878, 0.008959,
+      0.437904, 0.166309, 0.018589,
+      0.482065, -0.086669, 0.076035,
+      0.901165, -0.146845, 0.183626,
+      0.820071, 0.009644, 0.167223,
+      0.758904, -0.133893, 0.010025,
     ]),
   },
 };
