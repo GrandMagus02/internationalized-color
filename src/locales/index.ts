@@ -1,0 +1,17 @@
+export { en } from './en.ts';
+export { ja } from './ja.ts';
+export { ja_traditional } from './ja-traditional.ts';
+export { zh } from './zh.ts';
+export { zh_traditional } from './zh-traditional.ts';
+export { ko } from './ko.ts';
+export { ko_traditional } from './ko-traditional.ts';
+export { ru } from './ru.ts';
+export { es } from './es.ts';
+export { de } from './de.ts';
+export { fr } from './fr.ts';
+export { pt } from './pt.ts';
+export { fa } from './fa.ts';
+export { nl } from './nl.ts';
+export { pl } from './pl.ts';
+export { sv } from './sv.ts';
+export { fi } from './fi.ts';

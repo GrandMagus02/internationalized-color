@@ -1,0 +1,49 @@
+{
+  "name": "internationalized-color",
+  "version": "0.1.0",
+  "description": "Internationalized color library with locale-aware naming across languages and cultures",
+  "module": "index.ts",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./css": "./src/bootstrap/css.ts",
+    "./locales/en": "./src/locales/en.ts",
+    "./locales/ja": "./src/locales/ja.ts",
+    "./locales/ja-traditional": "./src/locales/ja-traditional.ts",
+    "./locales/zh": "./src/locales/zh.ts",
+    "./locales/zh-traditional": "./src/locales/zh-traditional.ts",
+    "./locales/ko": "./src/locales/ko.ts",
+    "./locales/ko-traditional": "./src/locales/ko-traditional.ts",
+    "./locales/ru": "./src/locales/ru.ts",
+    "./locales/es": "./src/locales/es.ts",
+    "./locales/de": "./src/locales/de.ts",
+    "./locales/fr": "./src/locales/fr.ts",
+    "./locales/pt": "./src/locales/pt.ts",
+    "./locales/fa": "./src/locales/fa.ts",
+    "./locales/nl": "./src/locales/nl.ts",
+    "./locales/pl": "./src/locales/pl.ts",
+    "./locales/sv": "./src/locales/sv.ts",
+    "./locales/fi": "./src/locales/fi.ts",
+    "./locales": "./src/locales/index.ts"
+  },
+  "keywords": [
+    "color",
+    "i18n",
+    "internationalization",
+    "localization",
+    "color-naming",
+    "multilingual",
+    "oklab",
+    "culori"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "culori": "^4.0.2"
+  }
+}
