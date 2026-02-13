@@ -48,11 +48,13 @@ jobs:
         if: steps.version.outputs.changed == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
+
+      - name: Update npm
+        if: steps.version.outputs.changed == 'true'
+        run: npm install -g npm@latest
 
       - name: Publish to npm with provenance
         if: steps.version.outputs.changed == 'true'
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
