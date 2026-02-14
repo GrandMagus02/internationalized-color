@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-02-14
+
 ### Added
 
 - `useLocale()` function-based API replacing the `ColorNamer` class for locale registration
