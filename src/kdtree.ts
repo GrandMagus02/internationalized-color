@@ -1,6 +1,9 @@
 /**
  * A 3-dimensional k-d tree for fast nearest-neighbor search in OkLab space.
- * Each point is [l, a, b] and carries an associated index back into the name array.
+ * Each point is `[l, a, b]` and carries an associated index back into the name array.
+ *
+ * The tree is built once at construction time with O(n log n) cost, then supports
+ * O(log n) nearest-neighbor queries via branch-and-bound pruning.
  */
 
 interface KDNode {
@@ -11,14 +14,24 @@ interface KDNode {
   axis: number;
 }
 
+/** Result of a nearest-neighbor query, containing the matched index and its distance. */
 export interface NearestResult {
+  /** Index into the original points/names array. */
   index: number;
+  /** Euclidean distance in OkLab space from the query point. */
   distance: number;
 }
 
 export class KDTree {
   #root: KDNode | null;
 
+  /**
+   * Build a k-d tree from a flat Float32Array of OkLab points.
+   *
+   * @param points - A flat Float32Array where every 3 consecutive floats represent
+   *   one point: `[l0, a0, b0, l1, a1, b1, ...]`.
+   * @param count - The number of points (i.e. `points.length / 3`).
+   */
   constructor(points: Float32Array, count: number) {
     const items: { point: [number, number, number]; index: number }[] = [];
     for (let i = 0; i < count; i++) {
@@ -50,7 +63,14 @@ export class KDTree {
     };
   }
 
-  /** Find the single nearest neighbor to the query point. */
+  /**
+   * Find the single nearest neighbor to the query point.
+   * Uses branch-and-bound pruning to skip subtrees that cannot contain a closer match.
+   *
+   * @param query - An `[l, a, b]` tuple in OkLab space.
+   * @returns The index and Euclidean distance of the nearest point.
+   *   Returns `{ index: -1, distance: Infinity }` if the tree is empty.
+   */
   nearest(query: [number, number, number]): NearestResult {
     let bestDist = Infinity;
     let bestIndex = -1;
@@ -82,7 +102,14 @@ export class KDTree {
     return { index: bestIndex, distance: Math.sqrt(bestDist) };
   }
 
-  /** Find the N nearest neighbors to the query point. */
+  /**
+   * Find the N nearest neighbors to the query point.
+   * Maintains a max-heap of size N and prunes branches that cannot improve the result set.
+   *
+   * @param query - An `[l, a, b]` tuple in OkLab space.
+   * @param n - The maximum number of neighbors to return.
+   * @returns An array of up to `n` results sorted by distance (closest first).
+   */
   nearestN(query: [number, number, number], n: number): NearestResult[] {
     // Max-heap of size n (worst = first)
     const heap: { index: number; dist: number }[] = [];
@@ -125,6 +152,15 @@ export class KDTree {
   }
 }
 
+/**
+ * Squared Euclidean distance between two 3D points.
+ * Uses squared distance to avoid the `Math.sqrt` cost during tree traversal;
+ * the actual distance is only computed in the final result.
+ *
+ * @param a - First point `[l, a, b]`.
+ * @param b - Second point `[l, a, b]`.
+ * @returns The squared Euclidean distance.
+ */
 function sqDist(a: [number, number, number], b: [number, number, number]): number {
   const dl = a[0]! - b[0]!;
   const da = a[1]! - b[1]!;
@@ -132,7 +168,12 @@ function sqDist(a: [number, number, number], b: [number, number, number]): numbe
   return dl * dl + da * da + db * db;
 }
 
-// Max-heap helpers (by dist, largest at index 0)
+/**
+ * Bubble an element up in a max-heap (keyed by `dist`) to restore the heap property.
+ *
+ * @param heap - The heap array.
+ * @param i - The index of the element to bubble up.
+ */
 function heapUp(heap: { dist: number }[], i: number) {
   while (i > 0) {
     const parent = (i - 1) >> 1;
@@ -145,6 +186,13 @@ function heapUp(heap: { dist: number }[], i: number) {
   }
 }
 
+/**
+ * Sift an element down in a max-heap (keyed by `dist`) to restore the heap property.
+ *
+ * @param heap - The heap array.
+ * @param i - The index of the element to sift down.
+ * @param size - The number of elements in the heap.
+ */
 function heapDown(heap: { dist: number }[], i: number, size: number) {
   while (true) {
     let largest = i;

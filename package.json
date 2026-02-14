@@ -11,6 +11,7 @@
   "exports": {
     ".": "./index.ts",
     "./css": "./src/bootstrap/css.ts",
+    "./utils": "./src/utils/index.ts",
     "./locales/aa": "./src/locales/aa.ts",
     "./locales/ab": "./src/locales/ab.ts",
     "./locales/af": "./src/locales/af.ts",

@@ -2,7 +2,7 @@
  * Quick integration check — exercises the full API surface.
  * Run with: bun scripts/integration-check.ts
  */
-import { Color, ColorNamer } from '../index.ts';
+import { Color, useLocale, nameColor, nearestColors, lookupColor, translateColor } from '../index.ts';
 import { en } from '../src/locales/en.ts';
 import { ja } from '../src/locales/ja.ts';
 import { ja_traditional } from '../src/locales/ja-traditional.ts';
@@ -15,7 +15,10 @@ useMode(modeOklch);
 useMode(modeHsl);
 useMode(modeLrgb);
 
-const namer = new ColorNamer([en, ja, ja_traditional, ru]);
+useLocale(en);
+useLocale(ja);
+useLocale(ja_traditional);
+useLocale(ru);
 
 // 1. Parse and convert
 const c = Color.hex('#e74c3c');
@@ -24,34 +27,34 @@ console.log('OkLCH:', c.to('oklch').toJSON());
 console.log('CSS:', c.toString());
 
 // 2. Name in English
-const enName = namer.name(c, 'en');
+const enName = nameColor(c, 'en');
 console.log('\nEnglish name:', enName?.name, `(distance: ${enName?.distance.toFixed(4)})`);
 
 // 3. Name in Japanese
-const jaName = namer.name(c, 'ja');
+const jaName = nameColor(c, 'ja');
 console.log('Japanese name:', jaName?.name, `(distance: ${jaName?.distance.toFixed(4)})`);
 
 // 4. Japanese traditional
-const jaTraditional = namer.name(c, 'ja', { level: 'traditional' });
+const jaTraditional = nameColor(c, 'ja', { level: 'traditional' });
 console.log('Japanese traditional:', jaTraditional?.name, `(distance: ${jaTraditional?.distance.toFixed(4)})`);
 
 // 5. Translation
-const siniy = namer.translate('синий', 'ru', 'en');
+const siniy = translateColor('синий', 'ru', 'en');
 console.log('\nRussian синий → English:', siniy?.name, `(distance: ${siniy?.distance.toFixed(4)})`);
 
-const goluboy = namer.translate('голубой', 'ru', 'en');
+const goluboy = translateColor('голубой', 'ru', 'en');
 console.log('Russian голубой → English:', goluboy?.name, `(distance: ${goluboy?.distance.toFixed(4)})`);
 
 // 6. Nearest colors
 const teal = Color.hex('#008080');
-const nearest = namer.nearest(teal, 'en', 5);
+const nearest = nearestColors(teal, 'en', 5);
 console.log('\n5 nearest to teal:');
 for (const n of nearest) {
   console.log(`  ${n.name} (${n.level}, distance: ${n.distance.toFixed(4)})`);
 }
 
 // 7. Reverse lookup
-const sakuraColor = namer.lookup('桜色', 'ja');
+const sakuraColor = lookupColor('桜色', 'ja');
 console.log('\n桜色 (sakura-iro):', sakuraColor?.toHex());
 
 // 8. Color comparison

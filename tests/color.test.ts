@@ -1,5 +1,5 @@
 import { test, expect, describe, beforeAll } from 'bun:test';
-import { Color } from '../index.ts';
+import { Color, parseColor, createColor, hexColor, convertColor, toHex, toCSS, mixColors, lighten, darken, nameColor, translateColor, lookupColor, useLocale } from '../index.ts';
 import {
   modeRgb,
   modeOklab,
@@ -10,6 +10,11 @@ import {
   modeLch,
   modeP3,
   modeLrgb,
+  modeA98,
+  modeProphoto,
+  modeRec2020,
+  modeXyz50,
+  modeXyz65,
   useMode,
 } from 'culori/fn';
 
@@ -24,8 +29,13 @@ beforeAll(() => {
     modeOklch,
     modeP3,
     modeLrgb,
+    modeA98,
+    modeProphoto,
+    modeRec2020,
+    modeXyz50,
+    modeXyz65,
   ];
-  
+
   for (const mode of modes) {
     useMode(mode as any);
   }
@@ -33,7 +43,7 @@ beforeAll(() => {
 
 describe('Color.parse', () => {
   test('parses hex strings', () => {
-    const c = Color.parse('#ff0000');
+    const c = Color.parse('#ff0000')!;
     expect(c.mode).toBe('rgb');
     expect(c.get('r')).toBeCloseTo(1, 5);
     expect(c.get('g')).toBeCloseTo(0, 5);
@@ -41,12 +51,12 @@ describe('Color.parse', () => {
   });
 
   test('parses short hex', () => {
-    const c = Color.parse('#f00');
+    const c = Color.parse('#f00')!;
     expect(c.get('r')).toBeCloseTo(1, 5);
   });
 
   test('parses rgb() function', () => {
-    const c = Color.parse('rgb(255, 128, 0)');
+    const c = Color.parse('rgb(255, 128, 0)')!;
     expect(c.mode).toBe('rgb');
     expect(c.get('r')).toBeCloseTo(1, 2);
     expect(c.get('g')).toBeCloseTo(0.502, 2);
@@ -54,13 +64,13 @@ describe('Color.parse', () => {
   });
 
   test('parses hsl() function', () => {
-    const c = Color.parse('hsl(120, 100%, 50%)');
+    const c = Color.parse('hsl(120, 100%, 50%)')!;
     expect(c.mode).toBe('hsl');
     expect(c.get('h')).toBeCloseTo(120, 2);
   });
 
   test('parses oklch()', () => {
-    const c = Color.parse('oklch(70% 0.15 180)');
+    const c = Color.parse('oklch(70% 0.15 180)')!;
     expect(c.mode).toBe('oklch');
     expect(c.get('l')).toBeCloseTo(0.7, 2);
     expect(c.get('c')).toBeCloseTo(0.15, 2);
@@ -68,20 +78,20 @@ describe('Color.parse', () => {
   });
 
   test('parses named CSS colors', () => {
-    const c = Color.parse('red');
+    const c = Color.parse('red')!;
     expect(c.get('r')).toBeCloseTo(1, 5);
     expect(c.get('g')).toBeCloseTo(0, 5);
     expect(c.get('b')).toBeCloseTo(0, 5);
   });
 
-  test('throws on invalid input', () => {
-    expect(() => Color.parse('notacolor')).toThrow('Cannot parse color');
+  test('returns undefined on invalid input', () => {
+    expect(Color.parse('notacolor')).toBeUndefined();
   });
 });
 
 describe('Color.hex', () => {
   test('creates from hex string', () => {
-    const c = Color.hex('#3498db');
+    const c = Color.hex('#3498db')!;
     expect(c.mode).toBe('rgb');
     expect(c.get('r')).toBeCloseTo(0.204, 2);
   });
@@ -109,29 +119,29 @@ describe('Color.create', () => {
 
 describe('Immutability', () => {
   test('set() returns a new instance', () => {
-    const a = Color.hex('#ff0000');
-    const b = a.to('oklch').set({ l: 0.4 });
+    const a = Color.hex('#ff0000')!;
+    const b = a.to('oklch')!.set({ l: 0.4 });
     expect(a).not.toBe(b);
   });
 
-  test('withAlpha() returns a new instance', () => {
-    const a = Color.hex('#ff0000');
-    const b = a.withAlpha(0.5);
+  test('setAlpha() returns a new instance', () => {
+    const a = Color.hex('#ff0000')!;
+    const b = a.setAlpha(0.5);
     expect(a).not.toBe(b);
     expect(a.alpha).toBeUndefined();
     expect(b.alpha).toBe(0.5);
   });
 
   test('to() returns a new instance', () => {
-    const a = Color.hex('#ff0000');
-    const b = a.to('oklch');
+    const a = Color.hex('#ff0000')!;
+    const b = a.to('oklch')!;
     expect(a).not.toBe(b);
     expect(a.mode).toBe('rgb');
     expect(b.mode).toBe('oklch');
   });
 
   test('underlying object cannot be modified', () => {
-    const c = Color.hex('#ff0000');
+    const c = Color.hex('#ff0000')!;
     const obj = c.toObject();
     obj.r = 0; // Modify the returned copy
     // Original should be unchanged
@@ -141,13 +151,13 @@ describe('Immutability', () => {
 
 describe('Conversion', () => {
   test('RGB to OkLab', () => {
-    const c = Color.hex('#ff0000').to('oklab');
+    const c = Color.hex('#ff0000')!.to('oklab')!;
     expect(c.mode).toBe('oklab');
     expect(c.get('l')).toBeCloseTo(0.628, 2);
   });
 
   test('RGB to OkLCH', () => {
-    const c = Color.hex('#ff0000').to('oklch');
+    const c = Color.hex('#ff0000')!.to('oklch')!;
     expect(c.mode).toBe('oklch');
     expect(c.get('l')).toBeCloseTo(0.628, 2);
     expect(c.get('c')).toBeGreaterThan(0);
@@ -155,37 +165,37 @@ describe('Conversion', () => {
   });
 
   test('toOklab() shorthand', () => {
-    const c = Color.hex('#3498db').toOklab();
+    const c = Color.hex('#3498db')!.toOklab()!;
     expect(c.mode).toBe('oklab');
   });
 
   test('round-trip conversion preserves color', () => {
-    const original = Color.hex('#e74c3c');
-    const roundTrip = original.to('oklch').to('rgb');
+    const original = Color.hex('#e74c3c')!;
+    const roundTrip = original.to('oklch')!.to('rgb')!;
     expect(roundTrip.get('r')).toBeCloseTo(original.get('r')!, 4);
     expect(roundTrip.get('g')).toBeCloseTo(original.get('g')!, 4);
     expect(roundTrip.get('b')).toBeCloseTo(original.get('b')!, 4);
   });
 
-  test('throws for unregistered mode', () => {
-    expect(() => Color.hex('#ff0000').to('jab')).toThrow();
+  test('returns undefined for unregistered mode', () => {
+    expect(Color.hex('#ff0000')!.to('jab')).toBeUndefined();
   });
 });
 
 describe('Serialization', () => {
   test('toHex() returns hex string', () => {
-    const c = Color.hex('#e74c3c');
+    const c = Color.hex('#e74c3c')!;
     expect(c.toHex()).toBe('#e74c3c');
   });
 
   test('toString("hex") returns hex', () => {
-    const c = Color.hex('#3498db');
+    const c = Color.hex('#3498db')!;
     expect(c.toString('hex')).toBe('#3498db');
   });
 
   test('toString() returns CSS string', () => {
-    const c = Color.hex('#ff0000');
-    const css = c.toString();
+    const c = Color.hex('#ff0000')!;
+    const css = c.toString()!;
     expect(typeof css).toBe('string');
     expect(css.length).toBeGreaterThan(0);
   });
@@ -209,27 +219,27 @@ describe('Serialization', () => {
 
 describe('deltaE and equals', () => {
   test('same color has distance 0', () => {
-    const a = Color.hex('#ff0000');
-    const b = Color.hex('#ff0000');
+    const a = Color.hex('#ff0000')!;
+    const b = Color.hex('#ff0000')!;
     expect(a.deltaE(b)).toBeCloseTo(0, 5);
   });
 
   test('different colors have positive distance', () => {
-    const a = Color.hex('#ff0000');
-    const b = Color.hex('#0000ff');
+    const a = Color.hex('#ff0000')!;
+    const b = Color.hex('#0000ff')!;
     expect(a.deltaE(b)).toBeGreaterThan(0);
   });
 
   test('equals with tolerance', () => {
-    const a = Color.hex('#ff0000');
-    const b = Color.hex('#ff1100');
+    const a = Color.hex('#ff0000')!;
+    const b = Color.hex('#ff1100')!;
     expect(a.equals(b)).toBe(false);
     expect(a.equals(b, 0.05)).toBe(true);
   });
 
   test('equals exact match', () => {
-    const a = Color.hex('#ff0000');
-    const b = Color.hex('#ff0000');
+    const a = Color.hex('#ff0000')!;
+    const b = Color.hex('#ff0000')!;
     expect(a.equals(b)).toBe(true);
   });
 });
@@ -325,19 +335,19 @@ describe('Channel introspection', () => {
 
 describe('Color.from', () => {
   test('accepts a string', () => {
-    const c = Color.from('#ff0000');
+    const c = Color.from('#ff0000')!;
     expect(c.mode).toBe('rgb');
     expect(c.get('r')).toBeCloseTo(1, 5);
   });
 
   test('accepts a Color instance (returns same instance)', () => {
-    const original = Color.hex('#ff0000');
-    const c = Color.from(original);
+    const original = Color.hex('#ff0000')!;
+    const c = Color.from(original)!;
     expect(c).toBe(original);
   });
 
   test('accepts a culori color object', () => {
-    const c = Color.from({ mode: 'rgb', r: 1, g: 0, b: 0 });
+    const c = Color.from({ mode: 'rgb', r: 1, g: 0, b: 0 })!;
     expect(c.mode).toBe('rgb');
     expect(c.get('r')).toBeCloseTo(1, 5);
   });
@@ -345,92 +355,378 @@ describe('Color.from', () => {
 
 describe('mix', () => {
   test('mixes two colors at 50% by default', () => {
-    const red = Color.hex('#ff0000');
-    const blue = Color.hex('#0000ff');
-    const mixed = red.mix(blue);
-    // Should be somewhere between red and blue
+    const red = Color.hex('#ff0000')!;
+    const blue = Color.hex('#0000ff')!;
+    const mixed = red.mix(blue)!;
     expect(mixed.mode).toBe('rgb');
     expect(mixed.get('r')!).toBeGreaterThan(0);
     expect(mixed.get('b')!).toBeGreaterThan(0);
   });
 
   test('mix at 0 returns the original color', () => {
-    const red = Color.hex('#ff0000');
-    const blue = Color.hex('#0000ff');
-    const mixed = red.mix(blue, 0);
+    const red = Color.hex('#ff0000')!;
+    const blue = Color.hex('#0000ff')!;
+    const mixed = red.mix(blue, 0)!;
     expect(mixed.get('r')).toBeCloseTo(1, 2);
     expect(mixed.get('b')).toBeCloseTo(0, 2);
   });
 
   test('mix at 1 returns the other color', () => {
-    const red = Color.hex('#ff0000');
-    const blue = Color.hex('#0000ff');
-    const mixed = red.mix(blue, 1);
+    const red = Color.hex('#ff0000')!;
+    const blue = Color.hex('#0000ff')!;
+    const mixed = red.mix(blue, 1)!;
     expect(mixed.get('r')).toBeCloseTo(0, 2);
     expect(mixed.get('b')).toBeCloseTo(1, 2);
   });
 
   test('mix accepts a string for the other color', () => {
-    const red = Color.hex('#ff0000');
-    const mixed = red.mix('#0000ff', 0.5);
+    const red = Color.hex('#ff0000')!;
+    const mixed = red.mix('#0000ff', 0.5)!;
     expect(mixed.get('r')!).toBeGreaterThan(0);
     expect(mixed.get('b')!).toBeGreaterThan(0);
   });
 
   test('mix returns result in original color mode', () => {
-    const c = Color.parse('oklch(70% 0.15 180)');
-    const mixed = c.mix('#ff0000');
+    const c = Color.parse('oklch(70% 0.15 180)')!;
+    const mixed = c.mix('#ff0000')!;
     expect(mixed.mode).toBe('oklch');
+  });
+
+  test('mix returns undefined for invalid string', () => {
+    const c = Color.hex('#ff0000')!;
+    expect(c.mix('notacolor')).toBeUndefined();
   });
 });
 
 describe('lighten and darken', () => {
   test('lighten() increases lightness', () => {
-    const c = Color.hex('#888888');
+    const c = Color.hex('#888888')!;
     const lighter = c.lighten();
-    const origL = c.toOklab().get('l')!;
-    const newL = lighter.toOklab().get('l')!;
+    const origL = c.toOklab()!.get('l')!;
+    const newL = lighter.toOklab()!.get('l')!;
     expect(newL).toBeGreaterThan(origL);
   });
 
   test('darken() decreases lightness', () => {
-    const c = Color.hex('#888888');
+    const c = Color.hex('#888888')!;
     const darker = c.darken();
-    const origL = c.toOklab().get('l')!;
-    const newL = darker.toOklab().get('l')!;
+    const origL = c.toOklab()!.get('l')!;
+    const newL = darker.toOklab()!.get('l')!;
     expect(newL).toBeLessThan(origL);
   });
 
   test('lighten() returns same mode as original', () => {
-    const c = Color.hex('#ff0000');
+    const c = Color.hex('#ff0000')!;
     expect(c.lighten().mode).toBe('rgb');
   });
 
   test('darken() returns same mode as original', () => {
-    const c = Color.hex('#ff0000');
+    const c = Color.hex('#ff0000')!;
     expect(c.darken().mode).toBe('rgb');
   });
 
   test('lighten() clamps to 1', () => {
-    const c = Color.hex('#ffffff');
+    const c = Color.hex('#ffffff')!;
     const lighter = c.lighten(0.5);
-    const l = lighter.toOklab().get('l')!;
+    const l = lighter.toOklab()!.get('l')!;
     expect(l).toBeLessThanOrEqual(1);
   });
 
   test('darken() clamps to 0', () => {
-    const c = Color.hex('#000000');
+    const c = Color.hex('#000000')!;
     const darker = c.darken(0.5);
-    const l = darker.toOklab().get('l')!;
+    const l = darker.toOklab()!.get('l')!;
     expect(l).toBeGreaterThanOrEqual(0);
   });
 
   test('lighten() with custom amount', () => {
-    const c = Color.hex('#888888');
+    const c = Color.hex('#888888')!;
     const a = c.lighten(0.05);
     const b = c.lighten(0.2);
-    const aL = a.toOklab().get('l')!;
-    const bL = b.toOklab().get('l')!;
+    const aL = a.toOklab()!.get('l')!;
+    const bL = b.toOklab()!.get('l')!;
     expect(bL).toBeGreaterThan(aL);
+  });
+
+  test('lighten() on oklab color stays in oklab', () => {
+    const c = Color.create('oklab', { l: 0.5, a: 0.1, b: -0.1 });
+    const lighter = c.lighten(0.1);
+    expect(lighter.mode).toBe('oklab');
+    expect(lighter.get('l')).toBeCloseTo(0.6, 5);
+  });
+
+  test('darken() on oklab color stays in oklab', () => {
+    const c = Color.create('oklab', { l: 0.5, a: 0.1, b: -0.1 });
+    const darker = c.darken(0.1);
+    expect(darker.mode).toBe('oklab');
+    expect(darker.get('l')).toBeCloseTo(0.4, 5);
+  });
+});
+
+describe('set() with mode option', () => {
+  test('converts to target mode then sets channel', () => {
+    const rgb = Color.hex('#ff0000')!;
+    const result = rgb.set({ mode: 'oklch', h: 180 });
+    expect(result.mode).toBe('oklch');
+    expect(result.get('h')).toBe(180);
+  });
+
+  test('without mode, stays in current mode', () => {
+    const c = Color.create('oklch', { l: 0.7, c: 0.15, h: 180 });
+    const result = c.set({ l: 0.5 });
+    expect(result.mode).toBe('oklch');
+    expect(result.get('l')).toBe(0.5);
+  });
+});
+
+describe('Semantic channel accessors', () => {
+  test('getRed/setRed on RGB color', () => {
+    const c = Color.hex('#ff0000')!;
+    expect(c.getRed()).toBeCloseTo(1, 5);
+    const modified = c.setRed(0.5);
+    expect(modified.getRed()).toBeCloseTo(0.5, 5);
+  });
+
+  test('getGreen/setGreen', () => {
+    const c = Color.hex('#00ff00')!;
+    expect(c.getGreen()).toBeCloseTo(1, 5);
+    const modified = c.setGreen(0.5);
+    expect(modified.getGreen()).toBeCloseTo(0.5, 5);
+  });
+
+  test('getBlue/setBlue', () => {
+    const c = Color.hex('#0000ff')!;
+    expect(c.getBlue()).toBeCloseTo(1, 5);
+    const modified = c.setBlue(0.5);
+    expect(modified.getBlue()).toBeCloseTo(0.5, 5);
+  });
+
+  test('getRed converts non-RGB to RGB', () => {
+    const c = Color.create('oklch', { l: 0.7, c: 0.15, h: 180 });
+    const r = c.getRed();
+    expect(typeof r).toBe('number');
+  });
+
+  test('getHue defaults to HSL', () => {
+    const c = Color.hex('#ff0000')!;
+    const h = c.getHue();
+    expect(typeof h).toBe('number');
+  });
+
+  test('getHue with oklch mode', () => {
+    const c = Color.hex('#ff0000')!;
+    const h = c.getHue('oklch');
+    expect(typeof h).toBe('number');
+  });
+
+  test('setHue changes hue in HSL', () => {
+    const c = Color.hex('#ff0000')!;
+    const modified = c.setHue(120);
+    expect(modified.mode).toBe('hsl');
+    expect(modified.get('h')).toBeCloseTo(120, 2);
+  });
+
+  test('getSaturation/setSaturation', () => {
+    const c = Color.parse('hsl(120, 100%, 50%)')!;
+    expect(c.getSaturation()).toBeCloseTo(1, 2);
+    const modified = c.setSaturation(0.5);
+    expect(modified.getSaturation()).toBeCloseTo(0.5, 2);
+  });
+
+  test('getLightness/setLightness', () => {
+    const c = Color.parse('hsl(120, 100%, 50%)')!;
+    expect(c.getLightness()).toBeCloseTo(0.5, 2);
+    const modified = c.setLightness(0.8);
+    expect(modified.getLightness()).toBeCloseTo(0.8, 2);
+  });
+
+  test('getLightness with oklab mode', () => {
+    const c = Color.hex('#ff0000')!;
+    const l = c.getLightness('oklab');
+    expect(typeof l).toBe('number');
+  });
+
+  test('getChroma/setChroma defaults to oklch', () => {
+    const c = Color.hex('#ff0000')!;
+    const chroma = c.getChroma();
+    expect(typeof chroma).toBe('number');
+    expect(chroma!).toBeGreaterThan(0);
+    const modified = c.setChroma(0.1);
+    expect(modified.getChroma()).toBeCloseTo(0.1, 2);
+  });
+
+  test('getWhiteness/setWhiteness', () => {
+    const c = Color.hex('#ffffff')!;
+    const w = c.getWhiteness();
+    expect(typeof w).toBe('number');
+    const modified = c.setWhiteness(0.5);
+    expect(modified.getWhiteness()).toBeCloseTo(0.5, 2);
+  });
+
+  test('getBlackness/setBlackness', () => {
+    const c = Color.hex('#000000')!;
+    const b = c.getBlackness();
+    expect(typeof b).toBe('number');
+    const modified = c.setBlackness(0.5);
+    expect(modified.getBlackness()).toBeCloseTo(0.5, 2);
+  });
+
+  test('getAlpha/setAlpha', () => {
+    const c = Color.hex('#ff0000')!;
+    expect(c.getAlpha()).toBeUndefined();
+    const withA = c.setAlpha(0.5);
+    expect(withA.getAlpha()).toBe(0.5);
+  });
+});
+
+describe('Conversion shorthands', () => {
+  const red = () => Color.hex('#ff0000')!;
+
+  test('toOklab()', () => {
+    expect(red().toOklab()!.mode).toBe('oklab');
+  });
+
+  test('toOklch()', () => {
+    expect(red().toOklch()!.mode).toBe('oklch');
+  });
+
+  test('toRgb()', () => {
+    const c = red().toOklch()!;
+    expect(c.toRgb()!.mode).toBe('rgb');
+  });
+
+  test('toHsl()', () => {
+    expect(red().toHsl()!.mode).toBe('hsl');
+  });
+
+  test('toHwb()', () => {
+    expect(red().toHwb()!.mode).toBe('hwb');
+  });
+
+  test('toLab()', () => {
+    expect(red().toLab()!.mode).toBe('lab');
+  });
+
+  test('toLch()', () => {
+    expect(red().toLch()!.mode).toBe('lch');
+  });
+
+  test('toP3()', () => {
+    expect(red().toP3()!.mode).toBe('p3');
+  });
+
+  test('toA98()', () => {
+    expect(red().toA98()!.mode).toBe('a98');
+  });
+
+  test('toProphoto()', () => {
+    expect(red().toProphoto()!.mode).toBe('prophoto');
+  });
+
+  test('toRec2020()', () => {
+    expect(red().toRec2020()!.mode).toBe('rec2020');
+  });
+
+  test('toXyz50()', () => {
+    expect(red().toXyz50()!.mode).toBe('xyz50');
+  });
+
+  test('toXyz65()', () => {
+    expect(red().toXyz65()!.mode).toBe('xyz65');
+  });
+
+  test('toLrgb()', () => {
+    expect(red().toLrgb()!.mode).toBe('lrgb');
+  });
+});
+
+describe('toHex gamut mapping', () => {
+  test('gamut maps out-of-sRGB colors', () => {
+    const c = Color.create('p3', { r: 1, g: 0, b: 0 });
+    const hex = c.toHex();
+    expect(hex).toBeDefined();
+    expect(hex!.startsWith('#')).toBe(true);
+  });
+});
+
+describe('Utility functions', () => {
+  test('parseColor parses hex', () => {
+    const c = parseColor('#ff0000');
+    expect(c).toBeDefined();
+    expect(c!.getRed()).toBeCloseTo(1, 5);
+  });
+
+  test('createColor creates a color', () => {
+    const c = createColor('rgb', { r: 1, g: 0, b: 0 });
+    expect(c.mode).toBe('rgb');
+  });
+
+  test('hexColor creates from hex', () => {
+    const c = hexColor('#3498db');
+    expect(c).toBeDefined();
+  });
+
+  test('convertColor converts string to mode', () => {
+    const c = convertColor('#ff0000', 'oklch');
+    expect(c).toBeDefined();
+    expect(c!.mode).toBe('oklch');
+  });
+
+  test('toHex returns hex string', () => {
+    expect(toHex('#ff0000')).toBe('#ff0000');
+  });
+
+  test('toCSS returns CSS string', () => {
+    const css = toCSS('#ff0000');
+    expect(typeof css).toBe('string');
+  });
+
+  test('mixColors mixes two strings', () => {
+    const mixed = mixColors('#ff0000', '#0000ff');
+    expect(mixed).toBeDefined();
+  });
+
+  test('lighten utility', () => {
+    const c = lighten('#888888', 0.1);
+    expect(c).toBeDefined();
+  });
+
+  test('darken utility', () => {
+    const c = darken('#888888', 0.1);
+    expect(c).toBeDefined();
+  });
+});
+
+describe('Naming utility functions', () => {
+  test('nameColor names a color', () => {
+    const { en } = require('../src/locales/en.ts');
+    useLocale(en);
+    const result = nameColor('#ff0000', 'en');
+    expect(result).not.toBeNull();
+    expect(result!.name).toBeDefined();
+  });
+
+  test('nameColor returns null for invalid color string', () => {
+    const result = nameColor('notacolor', 'en');
+    expect(result).toBeNull();
+  });
+
+  test('nameColor accepts a Color instance', () => {
+    const c = Color.hex('#ff0000')!;
+    const result = nameColor(c, 'en');
+    expect(result).not.toBeNull();
+  });
+
+  test('translateColor translates between locales', () => {
+    const { es } = require('../src/locales/es.ts');
+    useLocale(es);
+    const result = translateColor('red', 'en', 'es');
+    expect(result).not.toBeNull();
+  });
+
+  test('lookupColor looks up a color by name', () => {
+    const result = lookupColor('red', 'en');
+    expect(result).toBeDefined();
+    expect(result!.mode).toBe('oklab');
   });
 });
