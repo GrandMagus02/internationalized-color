@@ -192,48 +192,48 @@ tomato.toObject();             // raw culori color object
 
 | Code | Language | Code | Language |
 |------|----------|------|----------|
-| aa | Afar | na | Nauru |
-| ab | Abkhazian | nb | Norwegian Bokmål |
-| af | Afrikaans | ne | Nepali |
-| ak | Akan | nl | Dutch |
-| am | Amharic | nn | Norwegian Nynorsk |
-| ar | Arabic | no | Norwegian |
-| az | Azerbaijani | ny | Chichewa |
-| bg | Bulgarian | oc | Occitan |
-| bn | Bengali | pa | Punjabi |
-| ca | Catalan | pl | Polish |
-| cr | Cree | ps | Pashto |
-| cs | Czech | pt | Portuguese |
-| cy | Welsh | ro | Romanian |
-| da | Danish | ru | Russian |
-| de | German | si | Sinhala |
-| el | Greek | sk | Slovak |
-| en | English | sl | Slovenian |
-| es | Spanish | sm | Samoan |
-| et | Estonian | so | Somali |
-| fa | Persian | sq | Albanian |
-| fi | Finnish | sr | Serbian |
-| fr | French | su | Sundanese |
-| ga | Irish | sv | Swedish |
-| gu | Gujarati | ta | Tamil |
-| he | Hebrew | te | Telugu |
-| hi | Hindi | th | Thai |
-| hr | Croatian | tl | Tagalog |
-| hu | Hungarian | tr | Turkish |
-| id | Indonesian | uk | Ukrainian |
-| is | Icelandic | ur | Urdu |
-| it | Italian | vi | Vietnamese |
-| ja | Japanese | zh | Chinese |
-| ka | Georgian | ja-traditional | Japanese wa-iro |
-| kn | Kannada | zh-traditional | Chinese traditional |
-| ko | Korean | ko-traditional | Korean obangsaek |
-| lb | Luxembourgish | | |
-| lt | Lithuanian | | |
-| lv | Latvian | | |
-| mk | Macedonian | | |
-| ml | Malayalam | | |
-| ms | Malay | | |
-| my | Burmese | | |
+| aa | 🇩🇯 Afar | na | 🇳🇷 Nauru |
+| ab | 🇬🇪 Abkhazian | nb | 🇳🇴 Norwegian Bokmål |
+| af | 🇿🇦 Afrikaans | ne | 🇳🇵 Nepali |
+| ak | 🇬🇭 Akan | nl | 🇳🇱 Dutch |
+| am | 🇪🇹 Amharic | nn | 🇳🇴 Norwegian Nynorsk |
+| ar | 🇸🇦 Arabic | no | 🇳🇴 Norwegian |
+| az | 🇦🇿 Azerbaijani | ny | 🇲🇼 Chichewa |
+| bg | 🇧🇬 Bulgarian | oc | 🇫🇷 Occitan |
+| bn | 🇧🇩 Bengali | pa | 🇮🇳 Punjabi |
+| ca | 🇪🇸 Catalan | pl | 🇵🇱 Polish |
+| cr | 🇨🇦 Cree | ps | 🇦🇫 Pashto |
+| cs | 🇨🇿 Czech | pt | 🇵🇹 Portuguese |
+| cy | 🏴󠁧󠁢󠁷󠁬󠁳󠁿 Welsh | ro | 🇷🇴 Romanian |
+| da | 🇩🇰 Danish | ru | 🇷🇺 Russian |
+| de | 🇩🇪 German | si | 🇱🇰 Sinhala |
+| el | 🇬🇷 Greek | sk | 🇸🇰 Slovak |
+| en | 🇬🇧 English | sl | 🇸🇮 Slovenian |
+| es | 🇪🇸 Spanish | sm | 🇼🇸 Samoan |
+| et | 🇪🇪 Estonian | so | 🇸🇴 Somali |
+| fa | 🇮🇷 Persian | sq | 🇦🇱 Albanian |
+| fi | 🇫🇮 Finnish | sr | 🇷🇸 Serbian |
+| fr | 🇫🇷 French | su | 🇮🇩 Sundanese |
+| ga | 🇮🇪 Irish | sv | 🇸🇪 Swedish |
+| gu | 🇮🇳 Gujarati | ta | 🇮🇳 Tamil |
+| he | 🇮🇱 Hebrew | te | 🇮🇳 Telugu |
+| hi | 🇮🇳 Hindi | th | 🇹🇭 Thai |
+| hr | 🇭🇷 Croatian | tl | 🇵🇭 Tagalog |
+| hu | 🇭🇺 Hungarian | tr | 🇹🇷 Turkish |
+| id | 🇮🇩 Indonesian | uk | 🇺🇦 Ukrainian |
+| is | 🇮🇸 Icelandic | ur | 🇵🇰 Urdu |
+| it | 🇮🇹 Italian | vi | 🇻🇳 Vietnamese |
+| ja | 🇯🇵 Japanese | zh | 🇨🇳 Chinese |
+| ka | 🇬🇪 Georgian | ja-traditional | 🇯🇵 Japanese wa-iro |
+| kn | 🇮🇳 Kannada | zh-traditional | 🇨🇳 Chinese traditional |
+| ko | 🇰🇷 Korean | ko-traditional | 🇰🇷 Korean obangsaek |
+| lb | 🇱🇺 Luxembourgish | | |
+| lt | 🇱🇹 Lithuanian | | |
+| lv | 🇱🇻 Latvian | | |
+| mk | 🇲🇰 Macedonian | | |
+| ml | 🇮🇳 Malayalam | | |
+| ms | 🇲🇾 Malay | | |
+| my | 🇲🇲 Burmese | | |
 
 </details>
 
@@ -246,6 +246,10 @@ Color naming data is derived from the **Many Languages, Many Colors Dataset**:
 > *EuroVis*, 2019.
 
 Survey data from [github.com/uwdata/color-naming-in-different-languages](https://github.com/uwdata/color-naming-in-different-languages).
+
+### Help Improve the Data
+
+The color naming models behind this library are only as good as the survey data they're built on. More responses — especially for underrepresented languages — lead to better color names and more accurate translations. You can contribute by taking the 15-minute color perception survey from the [Many Languages, Many Colors](https://studies.labinthewild.org/color-perception/?REF=ManyLanguagesManyColors) project. Every response helps refine the models that power this library.
 
 ## Regenerating Locale Data
 
