@@ -12,8 +12,6 @@ Internationalized color library providing locale-aware color naming across 74 la
 bun install                          # Install dependencies
 bun test                             # Run all tests
 bun test tests/naming.test.ts        # Run a single test file
-bun scripts/integration-check.ts     # Full API integration smoke test
-bun scripts/compute-oklab.ts         # Compute OkLab centroids for CSS colors
 ```
 
 ### Regenerating locale data from the UW dataset
@@ -39,7 +37,7 @@ Default to using Bun instead of Node.js.
 ### Layered design
 
 ```
-ColorNamer (naming.ts)      — locale-aware naming, translation, nearest-neighbor
+naming.ts                   — locale-aware naming, translation, nearest-neighbor (module-level functions)
   ↓ uses
 KDTree (kdtree.ts)          — 3D k-d tree for fast OkLab nearest-neighbor search
   ↓ operates on
@@ -63,9 +61,9 @@ culori/fn                   — color math, parsing, conversion (tree-shakeable)
 
 ### Core files
 
-- `index.ts` — barrel export of `Color`, `ColorNamer`, `setup`, and types
+- `index.ts` — barrel export of `Color`, naming functions (`useLocale`, `nameColor`, `nearestColors`, `lookupColor`, `listColorNames`, `translateColor`), types, and utils
 - `src/Color.ts` — immutable Color class (thin wrapper over culori)
-- `src/naming.ts` — `ColorNamer` class: `name()`, `nearest()`, `lookup()`, `names()`, `translate()`
+- `src/naming.ts` — module-level naming functions with module-scoped `dictionaries` and `trees` caches
 - `src/kdtree.ts` — 3D k-d tree with `nearest()` and `nearestN()` using max-heap
 - `src/types.ts` — `ColorDictionary`, `ColorNameSet`, `ColorName`, `NamingOptions`, `TranslationResult`
 - `src/setup.ts` — `setup()` registers culori modes via `useMode()`
