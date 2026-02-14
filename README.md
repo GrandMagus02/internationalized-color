@@ -2,7 +2,18 @@
 
 # Internationalized Color
 
-Locale-aware color naming across 74 languages using OkLab color space and k-d trees for efficient nearest-neighbor lookup.
+A locale-aware color naming library that maps any color to its closest name in 74 languages. Built on [culori](https://culorijs.org/) for color math, it uses k-d trees in OkLab perceptual color space for fast, accurate nearest-neighbor lookup — so the names you get match what humans actually see.
+
+## Features
+
+- **74 languages** — Arabic, Japanese, Hindi, French, Chinese, and 69 more, each with survey-derived color names
+- **3 naming tiers** — basic (Berlin-Kay ~11 terms), extended (common names), and traditional (cultural: Japanese wa-iro, Chinese traditional, Korean obangsaek)
+- **Cross-language translation** — translate color names between any two supported languages
+- **Perceptually accurate** — nearest-neighbor search in OkLab space correlates with human color perception
+- **O(log n) lookup** — k-d tree indexing, lazily built and cached per locale
+- **Immutable Color class** — parse, convert, mix, lighten/darken across any CSS Color Level 4 space
+- **Tree-shakeable** — import only the locales and color spaces you need
+- **Zero config** — works with any CSS color string out of the box
 
 ## Install
 
@@ -24,34 +35,47 @@ bun add internationalized-color
 
 ## Usage
 
-Register color spaces first, then load any locales you need:
+Register color spaces and locales, then use the standalone functions:
 
 ```ts
 import 'internationalized-color/css'; // registers all CSS Color Level 4 spaces
-import { Color, ColorNamer } from 'internationalized-color';
+import { useLocale, nameColor, nearestColors, lookupColor, translateColor } from 'internationalized-color';
 import { en } from 'internationalized-color/locales/en';
 import { ar } from 'internationalized-color/locales/ar';
 import { ja } from 'internationalized-color/locales/ja';
 
-const namer = new ColorNamer([en, ar, ja]);
-const color = Color.parse('#ff6347');
+// Register locales (like culori's useMode)
+useLocale(en);
+useLocale(ar);
+useLocale(ja);
 
 // Name a color in English
-namer.name(color, 'en'); // → "tomato"
+nameColor('#ff6347', 'en'); // → "tomato"
 
 // Name the same color in Japanese
-namer.name(color, 'ja'); // → "朱色"
+nameColor('#ff6347', 'ja'); // → "朱色"
 
 // Name at the basic (Berlin-Kay 11) tier only
-namer.name(color, 'en', { level: 'basic' }); // → "red"
+nameColor('#ff6347', 'en', { level: 'basic' }); // → "red"
 
 // Translate a color name across languages
-namer.translate('red', 'en', 'ar'); // → "أحمر"
-namer.translate('red', 'en', 'ja'); // → "赤"
-namer.translate('blue', 'en', 'fr'); // → "bleu roi"
+translateColor('red', 'en', 'ar'); // → "أحمر"
+translateColor('red', 'en', 'ja'); // → "赤"
 
 // Find the N closest named colors
-namer.nearest(color, 'en', 3); // → ["tomato", "orangered", "coral"]
+nearestColors('#ff6347', 'en', 3); // → ["tomato", "orangered", "coral"]
+
+// Reverse lookup: name → Color
+lookupColor('tomato', 'en'); // → Color (oklab)
+```
+
+You can also pass a `ColorDictionary` directly instead of a locale string, bypassing the registry:
+
+```ts
+import { en } from 'internationalized-color/locales/en';
+import { nameColor } from 'internationalized-color';
+
+nameColor('#ff6347', en); // works without useLocale()
 ```
 
 ### Color formats
@@ -129,13 +153,14 @@ const generic = tomato.to('rec2020');  // any registered mode
 // Read channels
 tomato.mode;                   // → "rgb"
 tomato.get('r');               // → 1
+tomato.getRed();               // → 1
 tomato.channels;               // → ["r", "g", "b"]
 tomato.entries();              // → [["r", 1], ["g", 0.388...], ["b", 0.278...]]
 tomato.has('r');               // → true
 
 // Modify channels (returns new Color)
 tomato.set({ r: 0.5 });
-tomato.withAlpha(0.8);
+tomato.setAlpha(0.8);
 
 // Mix colors (defaults to 50% blend in OkLab)
 tomato.mix(sky);               // perceptually uniform blend
