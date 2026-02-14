@@ -61,6 +61,15 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Extract changelog for release
+        if: steps.version.outputs.changed == 'true'
+        id: changelog
+        run: |
+          # Extract everything under [Unreleased] until the next ## heading
+          NOTES=$(awk '/^## \[Unreleased\]/{found=1; next} found && /^## \[/{exit} found{print}' CHANGELOG.md)
+          # Write to file to preserve formatting
+          echo "$NOTES" > /tmp/release-notes.md
+
       - name: Create GitHub Release
         if: steps.version.outputs.changed == 'true'
         env:
@@ -68,5 +77,17 @@ jobs:
         run: |
           gh release create "v${{ steps.version.outputs.new }}" \
             --title "v${{ steps.version.outputs.new }}" \
-            --generate-notes \
-            --notes-start-tag "v${{ steps.version.outputs.old }}"
+            --notes-file /tmp/release-notes.md
+
+      - name: Update CHANGELOG.md
+        if: steps.version.outputs.changed == 'true'
+        run: |
+          DATE=$(date +%Y-%m-%d)
+          VERSION="${{ steps.version.outputs.new }}"
+          # Add version heading under [Unreleased]
+          sed -i "s/^## \[Unreleased\]/## [Unreleased]\n\n## [$VERSION] - $DATE/" CHANGELOG.md
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "chore: update CHANGELOG.md for v$VERSION"
+          git push
