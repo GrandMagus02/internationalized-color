@@ -2,14 +2,18 @@
  * Quick integration check — exercises the full API surface.
  * Run with: bun scripts/integration-check.ts
  */
-import { Color, ColorNamer, setup } from '../index.ts';
+import { Color, ColorNamer } from '../index.ts';
 import { en } from '../src/locales/en.ts';
 import { ja } from '../src/locales/ja.ts';
 import { ja_traditional } from '../src/locales/ja-traditional.ts';
 import { ru } from '../src/locales/ru.ts';
-import { modeRgb, modeOklab, modeOklch, modeHsl, modeLrgb } from 'culori/fn';
+import { modeRgb, modeOklab, modeOklch, modeHsl, modeLrgb, useMode } from 'culori/fn';
 
-setup([modeRgb, modeOklab, modeOklch, modeHsl, modeLrgb]);
+useMode(modeRgb);
+useMode(modeOklab);
+useMode(modeOklch);
+useMode(modeHsl);
+useMode(modeLrgb);
 
 const namer = new ColorNamer([en, ja, ja_traditional, ru]);
 
