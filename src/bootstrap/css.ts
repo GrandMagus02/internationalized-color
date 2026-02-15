@@ -9,6 +9,7 @@
 import { useMode } from 'culori/fn';
 import {
   modeRgb,
+  modeHsv,
   modeHsl,
   modeHwb,
   modeLab,
@@ -26,6 +27,7 @@ import {
 
 const modes = [
   modeRgb,
+  modeHsv,
   modeHsl,
   modeHwb,
   modeLab,

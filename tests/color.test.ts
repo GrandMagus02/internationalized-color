@@ -5,6 +5,7 @@ import {
   modeOklab,
   modeOklch,
   modeHsl,
+  modeHsv,
   modeHwb,
   modeLab,
   modeLch,
@@ -22,6 +23,7 @@ beforeAll(() => {
   const modes = [
     modeRgb,
     modeHsl,
+    modeHsv,
     modeHwb,
     modeLab,
     modeLch,
@@ -172,6 +174,22 @@ describe('Conversion', () => {
   test('round-trip conversion preserves color', () => {
     const original = Color.hex('#e74c3c')!;
     const roundTrip = original.to('oklch')!.to('rgb')!;
+    expect(roundTrip.get('r')).toBeCloseTo(original.get('r')!, 4);
+    expect(roundTrip.get('g')).toBeCloseTo(original.get('g')!, 4);
+    expect(roundTrip.get('b')).toBeCloseTo(original.get('b')!, 4);
+  });
+
+  test('RGB to HSV', () => {
+    const c = Color.hex('#ff0000')!.to('hsv')!;
+    expect(c.mode).toBe('hsv');
+    expect(c.get('h')).toBeCloseTo(0, 2);
+    expect(c.get('s')).toBeCloseTo(1, 2);
+    expect(c.get('v')).toBeCloseTo(1, 2);
+  });
+
+  test('HSV round-trip preserves color', () => {
+    const original = Color.hex('#e74c3c')!;
+    const roundTrip = original.to('hsv')!.to('rgb')!;
     expect(roundTrip.get('r')).toBeCloseTo(original.get('r')!, 4);
     expect(roundTrip.get('g')).toBeCloseTo(original.get('g')!, 4);
     expect(roundTrip.get('b')).toBeCloseTo(original.get('b')!, 4);
@@ -546,6 +564,27 @@ describe('Semantic channel accessors', () => {
     expect(typeof l).toBe('number');
   });
 
+  test('getValue/setValue (HSV)', () => {
+    const c = Color.hex('#ff0000')!;
+    const v = c.getValue();
+    expect(typeof v).toBe('number');
+    expect(v).toBeCloseTo(1, 2);
+    const modified = c.setValue(0.5);
+    expect(modified.getValue()).toBeCloseTo(0.5, 2);
+  });
+
+  test('getValue converts non-HSV to HSV', () => {
+    const c = Color.create('oklch', { l: 0.7, c: 0.15, h: 180 });
+    const v = c.getValue();
+    expect(typeof v).toBe('number');
+  });
+
+  test('setValue returns HSV mode color', () => {
+    const c = Color.hex('#ff0000')!;
+    const modified = c.setValue(0.8);
+    expect(modified.mode).toBe('hsv');
+  });
+
   test('getChroma/setChroma defaults to oklch', () => {
     const c = Color.hex('#ff0000')!;
     const chroma = c.getChroma();
@@ -597,6 +636,10 @@ describe('Conversion shorthands', () => {
 
   test('toHsl()', () => {
     expect(red().toHsl()!.mode).toBe('hsl');
+  });
+
+  test('toHsv()', () => {
+    expect(red().toHsv()!.mode).toBe('hsv');
   });
 
   test('toHwb()', () => {

@@ -418,6 +418,27 @@ export class Color {
   }
 
   /**
+   * Get the value channel (HSV color space, 0–1).
+   *
+   * @returns The value value, or `undefined` if conversion fails.
+   */
+  getValue(): number | undefined {
+    const c = this.#color.mode === 'hsv' ? this : this.to('hsv');
+    return c?.get('v');
+  }
+
+  /**
+   * Set the value channel (HSV color space).
+   *
+   * @param value - The value value (0–1).
+   * @returns A new Color with the updated value.
+   */
+  setValue(value: number): Color {
+    const c = this.#color.mode === 'hsv' ? this : this.to('hsv');
+    return c!.set({ v: value });
+  }
+
+  /**
    * Get the chroma channel. Converts to the specified mode if needed.
    *
    * @param mode - A chroma-bearing color space. Defaults to `'oklch'`.
@@ -536,6 +557,15 @@ export class Color {
    */
   toHsl(): Color | undefined {
     return this.to('hsl');
+  }
+
+  /**
+   * Convert to HSV. Shorthand for `this.to('hsv')`.
+   *
+   * @returns A new Color in the HSV color space, or `undefined` on failure.
+   */
+  toHsv(): Color | undefined {
+    return this.to('hsv');
   }
 
   /**
