@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Improved bootstrap for Culori CSS color modes
+
+## [1.1.0] - 2026-02-15
+
 ### Added
 
 - `HSV` color mode to bootstrap
