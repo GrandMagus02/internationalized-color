@@ -1,6 +1,6 @@
 {
   "name": "internationalized-color",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Objects and functions for representing and manipulating colors in a locale-aware manner across 74 languages",
   "module": "index.ts",
   "type": "module",
