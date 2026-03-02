@@ -794,7 +794,7 @@ export class Color {
    * ```
    */
   static from(value: string | Color | CuloriColor): Color | undefined {
-    if (value instanceof Color) return value;
+    if (Color.isColor(value)) return value;
     if (typeof value === 'string') return Color.parse(value);
     return new Color(value);
   }
@@ -826,6 +826,27 @@ export class Color {
    */
   static hex(value: string): Color | undefined {
     return Color.parse(value);
+  }
+  
+  /**
+   * Check whether a value is a Color instance.
+   *
+   * Uses duck-typing instead of `instanceof` so it works reliably
+   * even when multiple copies of the library are bundled (e.g. SSG builds
+   * where Rollup creates separate chunks).
+   *
+   * @param value - The value to check.
+   * @returns `true` if `value` is a Color instance (or duck-types as one).
+   */
+  static isColor(value: unknown): value is Color {
+    if (value instanceof Color) return true;
+    return (
+      value !== null &&
+      typeof value === 'object' &&
+      typeof (value as Color).to === 'function' &&
+      typeof (value as Color).set === 'function' &&
+      'alpha' in value
+    );
   }
 
   /**
