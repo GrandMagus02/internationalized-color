@@ -149,10 +149,12 @@ function parseFloat32Block(block: string): number[][] {
 
 function parseNamesArray(block: string): string[] {
   const names: string[] = [];
-  const regex = /'([^']*)'|"([^"]*)"/g;
+  const regex = /'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"/g;
   let m;
   while ((m = regex.exec(block)) !== null) {
-    names.push(m[1] ?? m[2]);
+    // Unescape the captured name
+    const raw = m[1] ?? m[2];
+    names.push(raw.replace(/\\'/g, "'").replace(/\\\\/g, '\\'));
   }
   return names;
 }

@@ -7,7 +7,7 @@ export const uk: ColorDictionary = {
   channels: {
     red: 'Червоний', green: 'Зелений', blue: 'Синій', hue: 'Тон', saturation: 'Насиченість', lightness: 'Світлість', value: 'Значення', whiteness: 'Білизна', blackness: 'Чорнота', chroma: 'Хрома', x: 'X', y: 'Y', z: 'Z', a: 'a', b: 'b',
   },
-    basic: {
+      basic: {
     names: [
       'чорний',
       'білий',
@@ -46,7 +46,7 @@ export const uk: ColorDictionary = {
       0.599871, 0, 0,
     ]),
   },
-    extended: {
+      extended: {
     names: [
       'блакитний',
       'салатовий',

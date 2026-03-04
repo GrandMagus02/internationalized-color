@@ -9,7 +9,7 @@ export const en: ColorDictionary = {
     value: 'Value', whiteness: 'Whiteness', blackness: 'Blackness',
     chroma: 'Chroma', x: 'X', y: 'Y', z: 'Z', a: 'a', b: 'b',
   },
-    basic: {
+      basic: {
     names: [
       'black',
       'white',
@@ -48,7 +48,7 @@ export const en: ColorDictionary = {
       0.599871, 0, 0,
     ]),
   },
-    extended: {
+      extended: {
     names: [
       'aliceblue',
       'antiquewhite',

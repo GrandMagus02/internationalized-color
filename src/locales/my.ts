@@ -7,7 +7,7 @@ export const my: ColorDictionary = {
   channels: {
     red: 'အနီ', green: 'အစိမ်း', blue: 'အပြာ', hue: 'အရောင်သွေ', saturation: 'ရောင်စုံ', lightness: 'တောက်ပမှု', value: 'တန်ဖိုး', whiteness: 'အဖြူ', blackness: 'အမည်း', chroma: 'ခရိုမာ', x: 'X', y: 'Y', z: 'Z', a: 'a', b: 'b',
   },
-    basic: {
+      basic: {
     names: [
       'လိမ္မော်ရောင်',
       'ခရမ်းရောင်',

@@ -7,7 +7,7 @@ export const ru: ColorDictionary = {
   channels: {
     red: 'Красный', green: 'Зелёный', blue: 'Синий', hue: 'Тон', saturation: 'Насыщенность', lightness: 'Светлота', value: 'Значение', whiteness: 'Белизна', blackness: 'Чернота', chroma: 'Хрома', x: 'X', y: 'Y', z: 'Z', a: 'a', b: 'b',
   },
-    basic: {
+      basic: {
     names: [
       'синий',
       'зеленый',

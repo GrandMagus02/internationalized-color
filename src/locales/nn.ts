@@ -7,7 +7,7 @@ export const nn: ColorDictionary = {
   channels: {
     red: 'Raud', green: 'Grøn', blue: 'Blå', hue: 'Kulør', saturation: 'Metting', lightness: 'Lysleik', value: 'Verdi', whiteness: 'Kvitleik', blackness: 'Svartleik', chroma: 'Kroma', x: 'X', y: 'Y', z: 'Z', a: 'a', b: 'b',
   },
-    basic: {
+      basic: {
     names: [
       'blå',
       'rosa',
