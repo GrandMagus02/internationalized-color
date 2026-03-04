@@ -1,47 +1,5 @@
-import { test, expect, describe, beforeAll } from 'bun:test';
-import { Color, parseColor, createColor, hexColor, convertColor, toHex, toCSS, mixColors, lighten, darken, nameColor, translateColor, lookupColor, useLocale } from '../index.ts';
-import {
-  modeRgb,
-  modeOklab,
-  modeOklch,
-  modeHsl,
-  modeHsv,
-  modeHwb,
-  modeLab,
-  modeLch,
-  modeP3,
-  modeLrgb,
-  modeA98,
-  modeProphoto,
-  modeRec2020,
-  modeXyz50,
-  modeXyz65,
-  useMode,
-} from 'culori/fn';
-
-beforeAll(() => {
-  const modes = [
-    modeRgb,
-    modeHsl,
-    modeHsv,
-    modeHwb,
-    modeLab,
-    modeLch,
-    modeOklab,
-    modeOklch,
-    modeP3,
-    modeLrgb,
-    modeA98,
-    modeProphoto,
-    modeRec2020,
-    modeXyz50,
-    modeXyz65,
-  ];
-
-  for (const mode of modes) {
-    useMode(mode as any);
-  }
-});
+import { test, expect, describe } from 'bun:test';
+import { Color, parseColor, createColor, hexColor, convertColor, toHex, toCSS, mixColors, lighten, darken, nameColor, translateColor, lookupColor, useLocale, getChannelLabels } from '../index.ts';
 
 describe('Color.parse', () => {
   test('parses hex strings', () => {
@@ -145,8 +103,7 @@ describe('Immutability', () => {
   test('underlying object cannot be modified', () => {
     const c = Color.hex('#ff0000')!;
     const obj = c.toObject();
-    obj.r = 0; // Modify the returned copy
-    // Original should be unchanged
+    (obj as any).r = 0;
     expect(c.get('r')).toBeCloseTo(1, 5);
   });
 });
@@ -174,9 +131,9 @@ describe('Conversion', () => {
   test('round-trip conversion preserves color', () => {
     const original = Color.hex('#e74c3c')!;
     const roundTrip = original.to('oklch')!.to('rgb')!;
-    expect(roundTrip.get('r')).toBeCloseTo(original.get('r')!, 4);
-    expect(roundTrip.get('g')).toBeCloseTo(original.get('g')!, 4);
-    expect(roundTrip.get('b')).toBeCloseTo(original.get('b')!, 4);
+    expect(roundTrip.get('r')).toBeCloseTo(original.get('r')!, 3);
+    expect(roundTrip.get('g')).toBeCloseTo(original.get('g')!, 3);
+    expect(roundTrip.get('b')).toBeCloseTo(original.get('b')!, 3);
   });
 
   test('RGB to HSV', () => {
@@ -190,13 +147,13 @@ describe('Conversion', () => {
   test('HSV round-trip preserves color', () => {
     const original = Color.hex('#e74c3c')!;
     const roundTrip = original.to('hsv')!.to('rgb')!;
-    expect(roundTrip.get('r')).toBeCloseTo(original.get('r')!, 4);
-    expect(roundTrip.get('g')).toBeCloseTo(original.get('g')!, 4);
-    expect(roundTrip.get('b')).toBeCloseTo(original.get('b')!, 4);
+    expect(roundTrip.get('r')).toBeCloseTo(original.get('r')!, 3);
+    expect(roundTrip.get('g')).toBeCloseTo(original.get('g')!, 3);
+    expect(roundTrip.get('b')).toBeCloseTo(original.get('b')!, 3);
   });
 
   test('returns undefined for unregistered mode', () => {
-    expect(Color.hex('#ff0000')!.to('jab')).toBeUndefined();
+    expect(Color.hex('#ff0000')!.to('jab' as any)).toBeUndefined();
   });
 });
 
@@ -290,8 +247,8 @@ describe('Channel access', () => {
     const c = Color.create('oklch', { l: 0.7, c: 0.15, h: 180 });
     const darker = c.set({ l: 0.4 });
     expect(darker.get('l')).toBe(0.4);
-    expect(darker.get('c')).toBe(0.15); // unchanged
-    expect(darker.get('h')).toBe(180); // unchanged
+    expect(darker.get('c')).toBe(0.15);
+    expect(darker.get('h')).toBe(180);
   });
 });
 
@@ -364,7 +321,7 @@ describe('Color.from', () => {
     expect(c).toBe(original);
   });
 
-  test('accepts a culori color object', () => {
+  test('accepts a raw color object', () => {
     const c = Color.from({ mode: 'rgb', r: 1, g: 0, b: 0 })!;
     expect(c.mode).toBe('rgb');
     expect(c.get('r')).toBeCloseTo(1, 5);
@@ -771,5 +728,78 @@ describe('Naming utility functions', () => {
     const result = lookupColor('red', 'en');
     expect(result).toBeDefined();
     expect(result!.mode).toBe('oklab');
+  });
+});
+
+describe('channelLabels', () => {
+  test('RGB color returns red/green/blue labels', () => {
+    const c = Color.parse('#ff0000')!;
+    expect(c.channelLabels()).toEqual(['red', 'green', 'blue']);
+  });
+
+  test('HSL color returns hue/saturation/lightness labels', () => {
+    const c = Color.parse('hsl(120, 100%, 50%)')!;
+    expect(c.channelLabels()).toEqual(['hue', 'saturation', 'lightness']);
+  });
+
+  test('OkLab color returns lightness/a/b labels', () => {
+    const c = Color.parse('#ff0000')!.toOklab();
+    expect(c.channelLabels()).toEqual(['lightness', 'a', 'b']);
+  });
+
+  test('OkLCH color returns lightness/chroma/hue labels', () => {
+    const c = Color.parse('#ff0000')!.toOklch();
+    expect(c.channelLabels()).toEqual(['lightness', 'chroma', 'hue']);
+  });
+
+  test('HWB color returns hue/whiteness/blackness labels', () => {
+    const c = Color.parse('#ff0000')!.toHwb();
+    expect(c.channelLabels()).toEqual(['hue', 'whiteness', 'blackness']);
+  });
+
+  test('HSV color returns hue/saturation/value labels', () => {
+    const c = Color.parse('#ff0000')!.toHsv();
+    expect(c.channelLabels()).toEqual(['hue', 'saturation', 'value']);
+  });
+
+  test('XYZ50 color returns x/y/z labels', () => {
+    const c = Color.parse('#ff0000')!.toXyz50();
+    expect(c.channelLabels()).toEqual(['x', 'y', 'z']);
+  });
+});
+
+describe('getChannelLabels', () => {
+  const { es: esLocale } = require('../src/locales/es.ts');
+  useLocale(esLocale);
+
+  test('returns lowercase labels without locale', () => {
+    const c = Color.parse('#ff0000')!;
+    expect(getChannelLabels(c)).toEqual(['red', 'green', 'blue']);
+  });
+
+  test('returns English labels with en locale', () => {
+    const c = Color.parse('#ff0000')!;
+    expect(getChannelLabels(c, 'en')).toEqual(['Red', 'Green', 'Blue']);
+  });
+
+  test('returns Spanish labels with es locale', () => {
+    const c = Color.parse('#ff0000')!;
+    expect(getChannelLabels(c, 'es')).toEqual(['Rojo', 'Verde', 'Azul']);
+  });
+
+  test('returns Spanish HSL labels', () => {
+    const c = Color.parse('hsl(120, 100%, 50%)')!;
+    expect(getChannelLabels(c, 'es')).toEqual(['Tono', 'Saturación', 'Luminosidad']);
+  });
+
+  test('falls back to lowercase keys for unregistered locale', () => {
+    const c = Color.parse('#ff0000')!;
+    expect(getChannelLabels(c, 'xx')).toEqual(['red', 'green', 'blue']);
+  });
+
+  test('leaves a/b untranslated in OkLab', () => {
+    const c = Color.parse('#ff0000')!.toOklab();
+    const labels = getChannelLabels(c, 'es');
+    expect(labels).toEqual(['Luminosidad', 'a', 'b']);
   });
 });

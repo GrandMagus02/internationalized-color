@@ -10,15 +10,8 @@ import { ru } from '../src/locales/ru.ts';
 import { es } from '../src/locales/es.ts';
 import { de } from '../src/locales/de.ts';
 import { fr } from '../src/locales/fr.ts';
-import { modeRgb, modeOklab, modeOklch, modeHsl, modeLrgb, useMode } from 'culori/fn';
 
 beforeAll(() => {
-  const modes = [modeRgb, modeOklab, modeOklch, modeHsl, modeLrgb];
-
-  for (const mode of modes) {
-    useMode(mode as any);
-  }
-
   for (const dict of [en, ja, ja_traditional, zh, zh_traditional, ko, ru, es, de, fr]) {
     useLocale(dict);
   }
@@ -35,7 +28,6 @@ describe('Cross-language translation', () => {
   test('translates English "red" to Chinese', () => {
     const result = translateColor('red', 'en', 'zh');
     expect(result).not.toBeNull();
-    // May match 红色 (basic) or 大红 (traditional, very close to pure red)
     expect(['红色', '大红']).toContain(result!.name);
     expect(result!.distance).toBeLessThan(0.05);
   });
@@ -74,20 +66,16 @@ describe('Cross-language translation', () => {
   test('translates Japanese "青" to English', () => {
     const result = translateColor('青', 'ja', 'en');
     expect(result).not.toBeNull();
-    // Dataset centroids reflect survey averages; 青 maps to a blue-family color
     expect(['blue', 'royalblue', 'mediumblue']).toContain(result!.name);
   });
 
   test('Russian siniy/goluboy distinction', () => {
-    // синий (dark blue) should translate to English as something blueish
     const siniy = translateColor('синий', 'ru', 'en');
     expect(siniy).not.toBeNull();
 
-    // голубой (light blue) should translate differently
     const goluboy = translateColor('голубой', 'ru', 'en');
     expect(goluboy).not.toBeNull();
 
-    // They should map to different English names
     expect(siniy!.name).not.toBe(goluboy!.name);
   });
 
@@ -109,7 +97,7 @@ describe('Cross-language translation', () => {
 
 describe('Multi-language naming', () => {
   test('names pure red correctly in all languages', () => {
-    const red = Color.hex('#ff0000');
+    const red = Color.hex('#ff0000')!;
 
     expect(nameColor(red, 'en', { level: 'basic' })!.name).toBe('red');
     expect(nameColor(red, 'ja', { level: 'basic' })!.name).toBe('赤');
@@ -119,7 +107,7 @@ describe('Multi-language naming', () => {
   });
 
   test('names pure blue correctly in all languages', () => {
-    const blue = Color.hex('#0000ff');
+    const blue = Color.hex('#0000ff')!;
 
     expect(nameColor(blue, 'en', { level: 'basic' })!.name).toBe('blue');
     const jaBlue = nameColor(blue, 'ja', { level: 'basic' })!.name;
@@ -131,18 +119,16 @@ describe('Multi-language naming', () => {
   });
 
   test('names teal in Japanese', () => {
-    const teal = Color.hex('#008080');
+    const teal = Color.hex('#008080')!;
     const result = nameColor(teal, 'ja');
     expect(result).not.toBeNull();
     expect(result!.name).toBeTruthy();
   });
 
   test('Japanese traditional naming', () => {
-    // 桜色 is a very light pink
     const sakura = lookupColor('桜色', 'ja');
     expect(sakura).toBeDefined();
 
-    // Looking up a cherry blossom color should find 桜色 in traditional
     const result = nameColor(sakura!, 'ja', { level: 'traditional' });
     expect(result).not.toBeNull();
     expect(result!.name).toBe('桜色');
@@ -155,7 +141,6 @@ describe('Multi-language naming', () => {
 
   test('lists all Japanese names including traditional', () => {
     const names = listColorNames('ja');
-    // Should include basic + extended + traditional
     expect(names.length).toBeGreaterThan(90);
   });
 });

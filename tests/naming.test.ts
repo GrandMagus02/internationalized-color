@@ -1,15 +1,8 @@
 import { test, expect, describe, beforeAll } from 'bun:test';
 import { Color, useLocale, nameColor, nearestColors, lookupColor, listColorNames } from '../index.ts';
 import { en } from '../src/locales/en.ts';
-import { modeRgb, modeOklab, modeOklch, modeHsl, modeLrgb, useMode } from 'culori/fn';
 
 beforeAll(() => {
-  const modes = [modeRgb, modeOklab, modeOklch, modeHsl, modeLrgb];
-
-  for (const mode of modes) {
-    useMode(mode as any);
-  }
-
   useLocale(en);
 });
 
@@ -58,11 +51,9 @@ describe('Color naming', () => {
 
     test('respects threshold option', () => {
       const c = Color.hex('#ff0000')!;
-      // With very small threshold, should still find red
       const result = nameColor(c, 'en', { level: 'basic', threshold: 0.001 });
       expect(result).not.toBeNull();
 
-      // With impossibly small threshold for a non-exact color
       const c2 = Color.create('oklab', { l: 0.5, a: 0.1, b: 0.1 });
       const result2 = nameColor(c2, 'en', { level: 'basic', threshold: 0.0001 });
       expect(result2).toBeNull();
@@ -118,8 +109,7 @@ describe('Color naming', () => {
     test('lists all names for a locale', () => {
       const allNames = listColorNames('en');
       expect(allNames.length).toBeGreaterThan(0);
-      // Should have basic + extended
-      expect(allNames.length).toBe(11 + 130); // 11 basic + 130 extended CSS names
+      expect(allNames.length).toBe(11 + 130);
     });
 
     test('returns empty for unknown locale', () => {

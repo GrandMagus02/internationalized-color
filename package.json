@@ -1,6 +1,6 @@
 {
   "name": "internationalized-color",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Objects and functions for representing and manipulating colors in a locale-aware manner across 74 languages",
   "module": "index.ts",
   "type": "module",
@@ -10,8 +10,39 @@
   },
   "exports": {
     ".": "./index.ts",
-    "./css": "./src/bootstrap/css.ts",
     "./utils": "./src/utils/index.ts",
+    "./convert": "./src/convert/index.ts",
+    "./convert/to-rgb": "./src/convert/to-rgb.ts",
+    "./convert/to-hsl": "./src/convert/to-hsl.ts",
+    "./convert/to-hsv": "./src/convert/to-hsv.ts",
+    "./convert/to-hwb": "./src/convert/to-hwb.ts",
+    "./convert/to-oklab": "./src/convert/to-oklab.ts",
+    "./convert/to-oklch": "./src/convert/to-oklch.ts",
+    "./convert/to-lab": "./src/convert/to-lab.ts",
+    "./convert/to-lch": "./src/convert/to-lch.ts",
+    "./convert/to-p3": "./src/convert/to-p3.ts",
+    "./convert/to-a98": "./src/convert/to-a98.ts",
+    "./convert/to-prophoto": "./src/convert/to-prophoto.ts",
+    "./convert/to-rec2020": "./src/convert/to-rec2020.ts",
+    "./convert/to-xyz50": "./src/convert/to-xyz50.ts",
+    "./convert/to-xyz65": "./src/convert/to-xyz65.ts",
+    "./convert/to-lrgb": "./src/convert/to-lrgb.ts",
+    "./convert/to-hex": "./src/convert/to-hex.ts",
+    "./spaces/rgb": "./src/spaces/rgb.ts",
+    "./spaces/hsl": "./src/spaces/hsl.ts",
+    "./spaces/hsv": "./src/spaces/hsv.ts",
+    "./spaces/hwb": "./src/spaces/hwb.ts",
+    "./spaces/oklab": "./src/spaces/oklab.ts",
+    "./spaces/oklch": "./src/spaces/oklch.ts",
+    "./spaces/lab": "./src/spaces/lab.ts",
+    "./spaces/lch": "./src/spaces/lch.ts",
+    "./spaces/p3": "./src/spaces/p3.ts",
+    "./spaces/a98": "./src/spaces/a98.ts",
+    "./spaces/prophoto": "./src/spaces/prophoto.ts",
+    "./spaces/rec2020": "./src/spaces/rec2020.ts",
+    "./spaces/xyz50": "./src/spaces/xyz50.ts",
+    "./spaces/xyz65": "./src/spaces/xyz65.ts",
+    "./spaces/lrgb": "./src/spaces/lrgb.ts",
     "./locales/aa": "./src/locales/aa.ts",
     "./locales/ab": "./src/locales/ab.ts",
     "./locales/af": "./src/locales/af.ts",
@@ -113,7 +144,7 @@
     "colour",
     "css-colors",
     "cubehelix",
-    "culori",
+    "zero-dependency",
     "din99",
     "gradients",
     "hsi",
@@ -155,8 +186,8 @@
   },
   "size-limit": [
     {
-      "name": "Everything (core + all locales + CSS bootstrap + dependencies)",
-      "path": ["index.ts", "src/bootstrap/css.ts", "src/locales/index.ts"],
+      "name": "Everything (core + all locales)",
+      "path": ["index.ts", "src/locales/index.ts"],
       "limit": "64 KB"
     }
   ],
@@ -171,7 +202,5 @@
   "peerDependencies": {
     "typescript": "^5"
   },
-  "dependencies": {
-    "culori": "^4.0.2"
-  }
+  "dependencies": {}
 }
