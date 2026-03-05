@@ -97,7 +97,7 @@ describe('Cross-language translation', () => {
 
 describe('Multi-language naming', () => {
   test('names pure red correctly in all languages', () => {
-    const red = Color.hex('#ff0000')!;
+    const red = Color.parse('#ff0000')!;
 
     expect(nameColor(red, 'en', { level: 'basic' })!.name).toBe('red');
     expect(nameColor(red, 'ja', { level: 'basic' })!.name).toBe('赤');
@@ -107,7 +107,7 @@ describe('Multi-language naming', () => {
   });
 
   test('names pure blue correctly in all languages', () => {
-    const blue = Color.hex('#0000ff')!;
+    const blue = Color.parse('#0000ff')!;
 
     expect(nameColor(blue, 'en', { level: 'basic' })!.name).toBe('blue');
     const jaBlue = nameColor(blue, 'ja', { level: 'basic' })!.name;
@@ -119,7 +119,7 @@ describe('Multi-language naming', () => {
   });
 
   test('names teal in Japanese', () => {
-    const teal = Color.hex('#008080')!;
+    const teal = Color.parse('#008080')!;
     const result = nameColor(teal, 'ja');
     expect(result).not.toBeNull();
     expect(result!.name).toBeTruthy();

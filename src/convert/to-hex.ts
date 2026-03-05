@@ -6,9 +6,9 @@ import { gamutMapToSrgb } from '../gamut.ts';
 export function toHex(color: Color): string {
   let rgb: [number, number, number];
   if (color.mode === 'rgb') {
-    rgb = color.channelValues();
+    rgb = color.toArray();
   } else {
-    const result = convert(color.mode, 'rgb', color.channelValues());
+    const result = convert(color.mode, 'rgb', color.toArray());
     if (!result) throw new Error(`Cannot convert ${color.mode} to rgb`);
     rgb = result;
   }

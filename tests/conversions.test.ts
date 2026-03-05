@@ -37,7 +37,7 @@ describe('Round-trip conversions', () => {
       if (mode === 'rgb') continue; // trivial round-trip
 
       test(`${name} (${hex}) → ${mode} → rgb`, () => {
-        const original = Color.hex(hex)!;
+        const original = Color.parse(hex)!;
         const converted = original.to(mode);
         expect(converted).toBeDefined();
         expect(converted!.mode).toBe(mode);
@@ -57,7 +57,7 @@ describe('Round-trip conversions', () => {
 
 describe('Edge cases', () => {
   test('black converts correctly to all spaces', () => {
-    const black = Color.hex('#000000')!;
+    const black = Color.parse('#000000')!;
     for (const mode of allModes) {
       const c = black.to(mode);
       expect(c).toBeDefined();
@@ -67,7 +67,7 @@ describe('Edge cases', () => {
   });
 
   test('white converts correctly to all spaces', () => {
-    const white = Color.hex('#ffffff')!;
+    const white = Color.parse('#ffffff')!;
     for (const mode of allModes) {
       const c = white.to(mode);
       expect(c).toBeDefined();
@@ -78,9 +78,9 @@ describe('Edge cases', () => {
 
   test('pure hues maintain identity through OkLab', () => {
     for (const hex of ['#ff0000', '#00ff00', '#0000ff']) {
-      const original = Color.hex(hex)!;
-      const oklab = original.toOklab()!;
-      const back = oklab.toRgb()!;
+      const original = Color.parse(hex)!;
+      const oklab = original.to('oklab')!;
+      const back = oklab.to('rgb')!;
       expect(back.get('r')).toBeCloseTo(original.get('r')!, 2);
       expect(back.get('g')).toBeCloseTo(original.get('g')!, 2);
       expect(back.get('b')).toBeCloseTo(original.get('b')!, 2);
@@ -88,13 +88,13 @@ describe('Edge cases', () => {
   });
 
   test('deltaE between same color is near zero', () => {
-    const c = Color.hex('#3498db')!;
+    const c = Color.parse('#3498db')!;
     expect(c.deltaE(c)).toBeCloseTo(0, 10);
   });
 
   test('deltaE is symmetric', () => {
-    const a = Color.hex('#ff0000')!;
-    const b = Color.hex('#0000ff')!;
+    const a = Color.parse('#ff0000')!;
+    const b = Color.parse('#0000ff')!;
     expect(a.deltaE(b)).toBeCloseTo(b.deltaE(a), 10);
   });
 });
@@ -129,12 +129,12 @@ describe('Out-of-gamut handling', () => {
 });
 
 describe('Typed conversion methods', () => {
-  const red = () => Color.parse('#ff0000')!;
+  const red = () => Color.parse('#ff0000')! as RGBColor;
 
   test('toRgb() returns RGBColor', () => {
     const c = red().toOklch().toRgb();
     expect(c).toBeInstanceOf(RGBColor);
-    expect((c as RGBColor).r).toBeCloseTo(1, 2);
+    expect(c.r).toBeCloseTo(1, 2);
   });
 
   test('toHsl() returns HSLColor', () => {
@@ -200,7 +200,7 @@ describe('Typed conversion methods', () => {
     expect(oklab).toBeInstanceOf(OklabColor);
     const rgb = oklab.toRgb();
     expect(rgb).toBeInstanceOf(RGBColor);
-    expect((rgb as RGBColor).r).toBeCloseTo(1, 2);
+    expect(rgb.r).toBeCloseTo(1, 2);
   });
 
   test('self-conversion clones', () => {

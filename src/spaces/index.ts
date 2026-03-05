@@ -1,4 +1,4 @@
-import { registerFactories, type Color } from '../Color.ts';
+import { registerFactories, Color } from '../Color.ts';
 import type { ColorMode } from '../types.ts';
 import { RGBColor } from './rgb.ts';
 import { HSLColor } from './hsl.ts';
@@ -51,3 +51,4 @@ export { Rec2020Color } from './rec2020.ts';
 export { XYZ50Color } from './xyz50.ts';
 export { XYZ65Color } from './xyz65.ts';
 export { LRGBColor } from './lrgb.ts';
+

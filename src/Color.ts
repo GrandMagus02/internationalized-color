@@ -1,9 +1,8 @@
-import type { ColorMode, ChannelConfig } from './types.ts';
+import type { ColorMode, ChannelDescriptor } from './types.ts';
 import { convert } from './conversions/index.ts';
 import { parseColor as parseColorInput } from './parse.ts';
 import { formatHex, formatCss } from './format.ts';
 import { gamutMapToSrgb } from './gamut.ts';
-import { interpolateChannels, interpolateAlpha } from './interpolate.ts';
 
 export abstract class Color {
   abstract readonly mode: ColorMode;
@@ -13,20 +12,42 @@ export abstract class Color {
     this.alpha = alpha;
   }
 
-  abstract channelValues(): [number, number, number];
-  abstract channelNames(): [string, string, string];
-  abstract channelLabels(): [string, string, string];
-  abstract channelConfig(): Record<string, ChannelConfig>;
-  protected abstract cloneWith(channels: [number, number, number], alpha?: number): Color;
+  abstract get channels(): ChannelDescriptor[];
+
+  private _values(): [number, number, number] {
+    const ch = this.channels;
+    return [ch[0]!.value, ch[1]!.value, ch[2]!.value];
+  }
+
+  private _keys(): [string, string, string] {
+    const ch = this.channels;
+    return [ch[0]!.key, ch[1]!.key, ch[2]!.key];
+  }
+
+  toArray(): [number, number, number];
+  toArray(includeAlpha: boolean): number[];
+  toArray(includeAlpha?: boolean): number[] {
+    const ch = this.channels;
+    const arr: number[] = [ch[0]!.value, ch[1]!.value, ch[2]!.value];
+    if (includeAlpha && this.alpha !== undefined) arr.push(this.alpha);
+    return arr;
+  }
+
+  toFloat32Array(includeAlpha?: boolean): Float32Array {
+    return new Float32Array(this.toArray(includeAlpha as any));
+  }
+
+  channelLabels(): [string, string, string] {
+    const ch = this.channels;
+    return [ch[0]!.label, ch[1]!.label, ch[2]!.label];
+  }
 
   get(channel: string): number | undefined;
   get<T>(channel: string, defaultValue: T): number | T;
   get(channel: string, defaultValue?: unknown): unknown {
     if (channel === 'alpha') return this.alpha ?? defaultValue;
-    const names = this.channelNames();
-    const values = this.channelValues();
-    const idx = names.indexOf(channel);
-    if (idx >= 0) return values[idx];
+    const ch = this.channels.find(c => c.key === channel);
+    if (ch) return ch.value;
     return defaultValue;
   }
 
@@ -38,60 +59,55 @@ export abstract class Color {
       if (!converted) return this;
       base = converted;
     }
-    const names = base.channelNames();
-    const values = [...base.channelValues()] as [number, number, number];
+    const keys = base._keys();
+    const values = [...base._values()] as [number, number, number];
     let alpha = base.alpha;
     for (const [key, value] of Object.entries(rest)) {
       if (key === 'alpha' && typeof value === 'number') {
         alpha = value;
         continue;
       }
-      const idx = names.indexOf(key);
+      const idx = keys.indexOf(key);
       if (idx >= 0 && typeof value === 'number') {
         values[idx] = value;
       }
     }
-    return base.cloneWith(values, alpha);
+    return createColorInstance(base.mode, values, alpha);
   }
 
   setAlpha(alpha: number): Color {
-    return this.cloneWith(this.channelValues(), alpha);
-  }
-
-  get channels(): string[] {
-    return [...this.channelNames()];
+    return createColorInstance(this.mode, this._values(), alpha);
   }
 
   has(channel: string): boolean {
-    return this.channelNames().includes(channel);
+    return this.channels.some(c => c.key === channel);
   }
 
   entries(): [string, number][] {
-    const names = this.channelNames();
-    const values = this.channelValues();
-    return names.map((n, i) => [n, values[i]!]);
+    return this.channels.map(c => [c.key, c.value]);
   }
 
   getRange(channel: string): [number, number] | undefined {
-    const config = this.channelConfig()[channel];
-    if (!config) return undefined;
-    return [config.min, config.max];
+    const ch = this.channels.find(c => c.key === channel);
+    if (!ch) return undefined;
+    return [ch.min, ch.max];
   }
 
   to(mode: ColorMode | string): Color | undefined {
     const targetMode = mode as ColorMode;
-    if (targetMode === this.mode) return this.cloneWith(this.channelValues(), this.alpha);
-    const result = convert(this.mode, targetMode, this.channelValues());
+    if (targetMode === this.mode) return createColorInstance(this.mode, this._values(), this.alpha);
+    const result = convert(this.mode, targetMode, this._values());
     if (!result) return undefined;
     return createColorInstance(targetMode, result, this.alpha);
   }
 
-  toOklab(): Color { return this.to('oklab')!; }
-  toOklch(): Color { return this.to('oklch')!; }
+  // Conversion shorthands
   toRgb(): Color { return this.to('rgb')!; }
   toHsl(): Color { return this.to('hsl')!; }
   toHsv(): Color { return this.to('hsv')!; }
   toHwb(): Color { return this.to('hwb')!; }
+  toOklab(): Color { return this.to('oklab')!; }
+  toOklch(): Color { return this.to('oklch')!; }
   toLab(): Color { return this.to('lab')!; }
   toLch(): Color { return this.to('lch')!; }
   toP3(): Color { return this.to('p3')!; }
@@ -102,138 +118,15 @@ export abstract class Color {
   toXyz65(): Color { return this.to('xyz65')!; }
   toLrgb(): Color { return this.to('lrgb')!; }
 
-  mix(other: Color | string, amount = 0.5, mode: ColorMode | string = 'oklab'): Color | undefined {
-    const otherColor = typeof other === 'string' ? Color.parse(other) : other;
-    if (!otherColor) return undefined;
-
-    const mixMode = mode as ColorMode;
-    const a = this.to(mixMode);
-    const b = otherColor.to(mixMode);
-    if (!a || !b) return undefined;
-
-    const mixed = interpolateChannels(mixMode, a.channelValues(), b.channelValues(), amount);
-    const mixedAlpha = interpolateAlpha(this.alpha, otherColor.alpha, amount);
-    const result = createColorInstance(mixMode, mixed, mixedAlpha);
-
-    // Convert back to original mode
-    if (mixMode !== this.mode) {
-      return result.to(this.mode);
-    }
-    return result;
-  }
-
-  lighten(amount = 0.1): Color {
-    const lab = this.toOklab()!;
-    const values = lab.channelValues();
-    const l = Math.min(1, values[0] + amount);
-    const adjusted = createColorInstance('oklab', [l, values[1], values[2]], this.alpha);
-    if (this.mode !== 'oklab') {
-      return adjusted.to(this.mode)!;
-    }
-    return adjusted;
-  }
-
-  darken(amount = 0.1): Color {
-    const lab = this.toOklab()!;
-    const values = lab.channelValues();
-    const l = Math.max(0, values[0] - amount);
-    const adjusted = createColorInstance('oklab', [l, values[1], values[2]], this.alpha);
-    if (this.mode !== 'oklab') {
-      return adjusted.to(this.mode)!;
-    }
-    return adjusted;
-  }
-
-  // Semantic accessors
-  getRed(): number | undefined {
-    const c = this.mode === 'rgb' ? this : this.to('rgb');
-    return c?.get('r');
-  }
-  setRed(value: number): Color {
-    const c = this.mode === 'rgb' ? this : this.to('rgb');
-    return c!.set({ r: value });
-  }
-  getGreen(): number | undefined {
-    const c = this.mode === 'rgb' ? this : this.to('rgb');
-    return c?.get('g');
-  }
-  setGreen(value: number): Color {
-    const c = this.mode === 'rgb' ? this : this.to('rgb');
-    return c!.set({ g: value });
-  }
-  getBlue(): number | undefined {
-    const c = this.mode === 'rgb' ? this : this.to('rgb');
-    return c?.get('b');
-  }
-  setBlue(value: number): Color {
-    const c = this.mode === 'rgb' ? this : this.to('rgb');
-    return c!.set({ b: value });
-  }
-  getHue(mode: ColorMode | string = 'hsl'): number | undefined {
-    const c = this.mode === mode ? this : this.to(mode as ColorMode);
-    return c?.get('h');
-  }
-  setHue(value: number, mode: ColorMode | string = 'hsl'): Color {
-    const c = this.mode === mode ? this : this.to(mode as ColorMode);
-    return c!.set({ h: value });
-  }
-  getSaturation(mode: ColorMode | string = 'hsl'): number | undefined {
-    const c = this.mode === mode ? this : this.to(mode as ColorMode);
-    return c?.get('s');
-  }
-  setSaturation(value: number, mode: ColorMode | string = 'hsl'): Color {
-    const c = this.mode === mode ? this : this.to(mode as ColorMode);
-    return c!.set({ s: value });
-  }
-  getLightness(mode: ColorMode | string = 'hsl'): number | undefined {
-    const c = this.mode === mode ? this : this.to(mode as ColorMode);
-    return c?.get('l');
-  }
-  setLightness(value: number, mode: ColorMode | string = 'hsl'): Color {
-    const c = this.mode === mode ? this : this.to(mode as ColorMode);
-    return c!.set({ l: value });
-  }
-  getValue(): number | undefined {
-    const c = this.mode === 'hsv' ? this : this.to('hsv');
-    return c?.get('v');
-  }
-  setValue(value: number): Color {
-    const c = this.mode === 'hsv' ? this : this.to('hsv');
-    return c!.set({ v: value });
-  }
-  getChroma(mode: ColorMode | string = 'oklch'): number | undefined {
-    const c = this.mode === mode ? this : this.to(mode as ColorMode);
-    return c?.get('c');
-  }
-  setChroma(value: number, mode: ColorMode | string = 'oklch'): Color {
-    const c = this.mode === mode ? this : this.to(mode as ColorMode);
-    return c!.set({ c: value });
-  }
-  getWhiteness(): number | undefined {
-    const c = this.mode === 'hwb' ? this : this.to('hwb');
-    return c?.get('w');
-  }
-  setWhiteness(value: number): Color {
-    const c = this.mode === 'hwb' ? this : this.to('hwb');
-    return c!.set({ w: value });
-  }
-  getBlackness(): number | undefined {
-    const c = this.mode === 'hwb' ? this : this.to('hwb');
-    return c?.get('b');
-  }
-  setBlackness(value: number): Color {
-    const c = this.mode === 'hwb' ? this : this.to('hwb');
-    return c!.set({ b: value });
-  }
   getAlpha(): number | undefined {
     return this.alpha;
   }
 
   deltaE(other: Color): number {
-    const a = this.toOklab()!;
-    const b = other.toOklab()!;
-    const av = a.channelValues();
-    const bv = b.channelValues();
+    const a = this.to('oklab')!;
+    const b = other.to('oklab')!;
+    const av = a._values();
+    const bv = b._values();
     const dl = av[0] - bv[0];
     const da = av[1] - bv[1];
     const db = av[2] - bv[2];
@@ -250,14 +143,13 @@ export abstract class Color {
   toHex(): string {
     let rgb: [number, number, number];
     if (this.mode === 'rgb') {
-      rgb = this.channelValues();
+      rgb = this._values();
     } else {
-      const result = convert(this.mode, 'rgb', this.channelValues());
+      const result = convert(this.mode, 'rgb', this._values());
       if (!result) throw new Error(`Cannot convert ${this.mode} to rgb`);
       rgb = result;
     }
 
-    // Gamut map if out of [0,1]
     const [r, g, b] = rgb;
     if (r < 0 || r > 1 || g < 0 || g > 1 || b < 0 || b > 1) {
       rgb = gamutMapToSrgb(r, g, b, 'rgb');
@@ -268,15 +160,15 @@ export abstract class Color {
 
   toString(format?: 'hex' | 'css'): string {
     if (format === 'hex') return this.toHex();
-    return formatCss(this.mode, this.channelValues(), this.alpha);
+    return formatCss(this.mode, this._values(), this.alpha);
   }
 
   toJSON(): { mode: string; channels: Record<string, number>; alpha?: number } {
-    const names = this.channelNames();
-    const values = this.channelValues();
+    const keys = this._keys();
+    const values = this._values();
     const channels: Record<string, number> = {};
     for (let i = 0; i < 3; i++) {
-      channels[names[i]!] = values[i]!;
+      channels[keys[i]!] = values[i]!;
     }
     return {
       mode: this.mode,
@@ -286,11 +178,11 @@ export abstract class Color {
   }
 
   toObject(): Record<string, unknown> {
-    const names = this.channelNames();
-    const values = this.channelValues();
+    const keys = this._keys();
+    const values = this._values();
     const obj: Record<string, unknown> = { mode: this.mode };
     for (let i = 0; i < 3; i++) {
-      obj[names[i]!] = values[i]!;
+      obj[keys[i]!] = values[i]!;
     }
     if (this.alpha !== undefined) obj.alpha = this.alpha;
     return obj;
@@ -300,36 +192,6 @@ export abstract class Color {
     const result = parseColorInput(value);
     if (!result) return undefined;
     return createColorInstance(result.mode, result.channels, result.alpha);
-  }
-
-  static hex(value: string): Color | undefined {
-    return Color.parse(value);
-  }
-
-  static from(value: string | Color | Record<string, unknown>): Color | undefined {
-    if (Color.isColor(value)) return value;
-    if (typeof value === 'string') return Color.parse(value);
-    // Raw object with mode
-    const obj = value as Record<string, unknown>;
-    const mode = obj.mode as ColorMode | undefined;
-    if (!mode) return undefined;
-
-    const channelMap: Record<ColorMode, [string, string, string]> = {
-      rgb: ['r', 'g', 'b'], hsl: ['h', 's', 'l'], hsv: ['h', 's', 'v'],
-      hwb: ['h', 'w', 'b'], oklab: ['l', 'a', 'b'], oklch: ['l', 'c', 'h'],
-      lab: ['l', 'a', 'b'], lch: ['l', 'c', 'h'], p3: ['r', 'g', 'b'],
-      a98: ['r', 'g', 'b'], prophoto: ['r', 'g', 'b'], rec2020: ['r', 'g', 'b'],
-      xyz50: ['x', 'y', 'z'], xyz65: ['x', 'y', 'z'], lrgb: ['r', 'g', 'b'],
-    };
-
-    const names = channelMap[mode];
-    if (!names) return undefined;
-    const channels: [number, number, number] = [
-      (obj[names[0]] as number) ?? 0,
-      (obj[names[1]] as number) ?? 0,
-      (obj[names[2]] as number) ?? 0,
-    ];
-    return createColorInstance(mode, channels, obj.alpha as number | undefined);
   }
 
   static create(mode: ColorMode | string, channels: Record<string, number>, alpha?: number): Color {
@@ -362,8 +224,6 @@ export abstract class Color {
   }
 }
 
-// Import subclasses lazily to avoid circular dependencies
-// These are set by the spaces barrel export
 let _factories: Record<ColorMode, (channels: [number, number, number], alpha?: number) => Color>;
 
 export function registerFactories(factories: Record<ColorMode, (channels: [number, number, number], alpha?: number) => Color>) {

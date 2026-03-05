@@ -5,6 +5,15 @@ export interface ChannelConfig {
   max: number;
 }
 
+export interface ChannelDescriptor {
+  key: string;
+  value: number;
+  type: 'degree' | 'percent' | 'number';
+  min: number;
+  max: number;
+  label: string;
+}
+
 export type ColorMode =
   | 'rgb'
   | 'hsl'

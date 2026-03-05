@@ -2,6 +2,7 @@
 import './src/spaces/index.ts';
 
 export { Color } from './src/Color.ts';
+export { createColor, isColor } from './src/create.ts';
 export {
   RGBColor,
   HSLColor,
@@ -32,6 +33,7 @@ export {
 export type {
   ColorMode,
   ChannelConfig,
+  ChannelDescriptor,
   ChannelLabels,
   ColorDictionary,
   ColorNameSet,

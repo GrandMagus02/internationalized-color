@@ -10,5 +10,5 @@ export function createColor(mode: ColorMode | string, channels: Record<string, n
 }
 
 export function hexColor(value: string): Color | undefined {
-  return Color.hex(value);
+  return Color.parse(value);
 }

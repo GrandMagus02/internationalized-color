@@ -42,8 +42,8 @@ function resolveTreeCache(locale: string | ColorDictionary): Map<string, KDTree>
 }
 
 function toOklabQuery(color: Color): [number, number, number] {
-  const oklab = color.toOklab()!;
-  return oklab.channelValues();
+  const oklab = color.to('oklab')!;
+  return oklab.toArray();
 }
 
 function getLevels(level?: Level): Level[] {
@@ -207,7 +207,7 @@ export function getChannelLabels(
   color: Color,
   locale?: string | ColorDictionary,
 ): [string, string, string] {
-  const labels = color.channelLabels();
+  const labels = color.channels.map(c => c.label) as [string, string, string];
   if (!locale) return labels;
   const dict = resolveDict(locale);
   if (!dict?.channels) return labels;

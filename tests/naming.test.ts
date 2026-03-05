@@ -9,7 +9,7 @@ beforeAll(() => {
 describe('Color naming', () => {
   describe('nameColor()', () => {
     test('names pure red as "red" (basic)', () => {
-      const c = Color.hex('#ff0000')!;
+      const c = Color.parse('#ff0000')!;
       const result = nameColor(c, 'en', { level: 'basic' });
       expect(result).not.toBeNull();
       expect(result!.name).toBe('red');
@@ -17,26 +17,26 @@ describe('Color naming', () => {
     });
 
     test('names pure blue as "blue" (basic)', () => {
-      const c = Color.hex('#0000ff')!;
+      const c = Color.parse('#0000ff')!;
       const result = nameColor(c, 'en', { level: 'basic' });
       expect(result).not.toBeNull();
       expect(result!.name).toBe('blue');
     });
 
     test('names black correctly', () => {
-      const c = Color.hex('#000000')!;
+      const c = Color.parse('#000000')!;
       const result = nameColor(c, 'en', { level: 'basic' });
       expect(result!.name).toBe('black');
     });
 
     test('names white correctly', () => {
-      const c = Color.hex('#ffffff')!;
+      const c = Color.parse('#ffffff')!;
       const result = nameColor(c, 'en', { level: 'basic' });
       expect(result!.name).toBe('white');
     });
 
     test('names teal from extended level', () => {
-      const c = Color.hex('#008080')!;
+      const c = Color.parse('#008080')!;
       const result = nameColor(c, 'en');
       expect(result).not.toBeNull();
       expect(result!.name).toBe('teal');
@@ -44,13 +44,13 @@ describe('Color naming', () => {
     });
 
     test('returns null for unknown locale', () => {
-      const c = Color.hex('#ff0000')!;
+      const c = Color.parse('#ff0000')!;
       const result = nameColor(c, 'xx');
       expect(result).toBeNull();
     });
 
     test('respects threshold option', () => {
-      const c = Color.hex('#ff0000')!;
+      const c = Color.parse('#ff0000')!;
       const result = nameColor(c, 'en', { level: 'basic', threshold: 0.001 });
       expect(result).not.toBeNull();
 
@@ -62,7 +62,7 @@ describe('Color naming', () => {
 
   describe('nearestColors()', () => {
     test('returns multiple results sorted by distance', () => {
-      const c = Color.hex('#ff4400')!;
+      const c = Color.parse('#ff4400')!;
       const results = nearestColors(c, 'en', 5);
       expect(results.length).toBe(5);
       for (let i = 1; i < results.length; i++) {
@@ -71,7 +71,7 @@ describe('Color naming', () => {
     });
 
     test('returns empty array for unknown locale', () => {
-      const c = Color.hex('#ff0000')!;
+      const c = Color.parse('#ff0000')!;
       const results = nearestColors(c, 'xx');
       expect(results).toEqual([]);
     });
