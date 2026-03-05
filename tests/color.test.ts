@@ -67,13 +67,13 @@ describe('Color.create', () => {
   });
 
   test('creates with alpha', () => {
-    const c = Color.create('rgb', { r: 1, g: 0, b: 0 }, 0.5);
+    const c = Color.create('rgb', { r: 1, g: 0, b: 0, alpha: 0.5 });
     expect(c.alpha).toBe(0.5);
   });
 
-  test('alpha is undefined when not specified', () => {
+  test('alpha defaults to 1 when not specified', () => {
     const c = Color.create('rgb', { r: 1, g: 0, b: 0 });
-    expect(c.alpha).toBeUndefined();
+    expect(c.alpha).toBe(1);
   });
 });
 
@@ -88,7 +88,7 @@ describe('Immutability', () => {
     const a = Color.parse('#ff0000')!;
     const b = a.setAlpha(0.5);
     expect(a).not.toBe(b);
-    expect(a.alpha).toBeUndefined();
+    expect(a.alpha).toBe(1);
     expect(b.alpha).toBe(0.5);
   });
 
@@ -124,7 +124,7 @@ describe('Conversion', () => {
   });
 
   test('toOklab() shorthand', () => {
-    const c = (Color.parse('#3498db')! as RGBColor).toOklab()!;
+    const c = Color.parse('#3498db')!.toOklab();
     expect(c.mode).toBe('oklab');
   });
 
@@ -176,7 +176,7 @@ describe('Serialization', () => {
   });
 
   test('toJSON() returns structured data', () => {
-    const c = Color.create('rgb', { r: 1, g: 0.5, b: 0 }, 0.8);
+    const c = Color.create('rgb', { r: 1, g: 0.5, b: 0, alpha: 0.8 });
     const json = c.toJSON();
     expect(json.mode).toBe('rgb');
     expect(json.channels.r).toBe(1);
@@ -185,10 +185,10 @@ describe('Serialization', () => {
     expect(json.alpha).toBe(0.8);
   });
 
-  test('toJSON() omits alpha when undefined', () => {
+  test('toJSON() includes alpha when defaulted', () => {
     const c = Color.create('rgb', { r: 1, g: 0, b: 0 });
     const json = c.toJSON();
-    expect(json.alpha).toBeUndefined();
+    expect(json.alpha).toBe(1);
   });
 });
 
@@ -287,7 +287,7 @@ describe('Channel introspection', () => {
   });
 
   test('entries() excludes mode and alpha', () => {
-    const c = Color.create('rgb', { r: 1, g: 0, b: 0 }, 0.5);
+    const c = Color.create('rgb', { r: 1, g: 0, b: 0, alpha: 0.5 });
     const entries = c.entries();
     const keys = entries.map(([k]) => k);
     expect(keys).not.toContain('mode');
@@ -315,13 +315,13 @@ describe('toArray and toFloat32Array', () => {
   });
 
   test('toArray(true) includes alpha', () => {
-    const c = Color.create('rgb', { r: 1, g: 0, b: 0 }, 0.5);
+    const c = Color.create('rgb', { r: 1, g: 0, b: 0, alpha: 0.5 });
     expect(c.toArray(true)).toEqual([1, 0, 0, 0.5]);
   });
 
-  test('toArray(true) without alpha returns 3 values', () => {
+  test('toArray(true) includes default alpha', () => {
     const c = Color.create('rgb', { r: 1, g: 0, b: 0 });
-    expect(c.toArray(true)).toEqual([1, 0, 0]);
+    expect(c.toArray(true)).toEqual([1, 0, 0, 1]);
   });
 
   test('toFloat32Array() returns Float32Array', () => {
@@ -470,24 +470,24 @@ describe('Semantic channel accessors', () => {
   });
 
   test('getRed on RGB subclass', () => {
-    const c = (Color.create('oklch', { l: 0.7, c: 0.15, h: 180 }) as OklchColor).toRgb();
+    const c = Color.create('oklch', { l: 0.7, c: 0.15, h: 180 }).toRgb();
     expect(typeof c.getRed()).toBe('number');
   });
 
   test('getHue on HSL color', () => {
-    const c = (Color.parse('#ff0000')! as RGBColor).toHsl();
+    const c = Color.parse('#ff0000')!.toHsl();
     const h = c.getHue();
     expect(typeof h).toBe('number');
   });
 
   test('getHue on oklch color', () => {
-    const c = (Color.parse('#ff0000')! as RGBColor).toOklch();
+    const c = Color.parse('#ff0000')!.toOklch();
     const h = c.getHue();
     expect(typeof h).toBe('number');
   });
 
   test('setHue changes hue in HSL', () => {
-    const c = (Color.parse('#ff0000')! as RGBColor).toHsl();
+    const c = Color.parse('#ff0000')!.toHsl();
     const modified = c.setHue(120);
     expect(modified.mode).toBe('hsl');
     expect(modified.get('h')).toBeCloseTo(120, 2);
@@ -508,13 +508,13 @@ describe('Semantic channel accessors', () => {
   });
 
   test('getLightness on oklab color', () => {
-    const c = (Color.parse('#ff0000')! as RGBColor).toOklab();
+    const c = Color.parse('#ff0000')!.toOklab();
     const l = c.getLightness();
     expect(typeof l).toBe('number');
   });
 
   test('getValue/setValue (HSV)', () => {
-    const c = (Color.parse('#ff0000')! as RGBColor).toHsv();
+    const c = Color.parse('#ff0000')!.toHsv();
     const v = c.getValue();
     expect(typeof v).toBe('number');
     expect(v).toBeCloseTo(1, 2);
@@ -523,19 +523,19 @@ describe('Semantic channel accessors', () => {
   });
 
   test('getValue on HSV subclass', () => {
-    const c = (Color.create('oklch', { l: 0.7, c: 0.15, h: 180 }) as OklchColor).toHsv();
+    const c = Color.create('oklch', { l: 0.7, c: 0.15, h: 180 }).toHsv();
     const v = c.getValue();
     expect(typeof v).toBe('number');
   });
 
   test('setValue returns HSV mode color', () => {
-    const c = (Color.parse('#ff0000')! as RGBColor).toHsv();
+    const c = Color.parse('#ff0000')!.toHsv();
     const modified = c.setValue(0.8);
     expect(modified.mode).toBe('hsv');
   });
 
   test('getChroma/setChroma on oklch', () => {
-    const c = (Color.parse('#ff0000')! as RGBColor).toOklch();
+    const c = Color.parse('#ff0000')!.toOklch();
     const chroma = c.getChroma();
     expect(typeof chroma).toBe('number');
     expect(chroma).toBeGreaterThan(0);
@@ -544,7 +544,7 @@ describe('Semantic channel accessors', () => {
   });
 
   test('getWhiteness/setWhiteness', () => {
-    const c = (Color.parse('#ffffff')! as RGBColor).toHwb();
+    const c = Color.parse('#ffffff')!.toHwb();
     const w = c.getWhiteness();
     expect(typeof w).toBe('number');
     const modified = c.setWhiteness(0.5);
@@ -552,7 +552,7 @@ describe('Semantic channel accessors', () => {
   });
 
   test('getBlackness/setBlackness', () => {
-    const c = (Color.parse('#000000')! as RGBColor).toHwb();
+    const c = Color.parse('#000000')!.toHwb();
     const b = c.getBlackness();
     expect(typeof b).toBe('number');
     const modified = c.setBlackness(0.5);
@@ -561,14 +561,14 @@ describe('Semantic channel accessors', () => {
 
   test('getAlpha/setAlpha', () => {
     const c = Color.parse('#ff0000')!;
-    expect(c.getAlpha()).toBeUndefined();
+    expect(c.getAlpha()).toBe(1);
     const withA = c.setAlpha(0.5);
     expect(withA.getAlpha()).toBe(0.5);
   });
 });
 
 describe('Conversion shorthands', () => {
-  const red = () => Color.parse('#ff0000')! as RGBColor;
+  const red = () => Color.parse('#ff0000')!;
 
   test('toOklab()', () => {
     expect(red().toOklab().mode).toBe('oklab');
@@ -649,8 +649,8 @@ describe('Utility functions', () => {
   });
 
   test('createColor creates a color', () => {
-    const c = createColor('rgb', { r: 1, g: 0, b: 0 });
-    expect(c.mode).toBe('rgb');
+    const c = createColor({mode: 'rgb', r: 1, g: 0, b: 0 });
+    expect(c!.mode).toBe('rgb');
   });
 
   test('hexColor creates from hex', () => {
@@ -735,27 +735,27 @@ describe('channelLabels', () => {
   });
 
   test('OkLab color returns lightness/a/b labels', () => {
-    const c = (Color.parse('#ff0000')! as RGBColor).toOklab();
+    const c = Color.parse('#ff0000')!.toOklab();
     expect(c.channelLabels()).toEqual(['lightness', 'a', 'b']);
   });
 
   test('OkLCH color returns lightness/chroma/hue labels', () => {
-    const c = (Color.parse('#ff0000')! as RGBColor).toOklch();
+    const c = Color.parse('#ff0000')!.toOklch();
     expect(c.channelLabels()).toEqual(['lightness', 'chroma', 'hue']);
   });
 
   test('HWB color returns hue/whiteness/blackness labels', () => {
-    const c = (Color.parse('#ff0000')! as RGBColor).toHwb();
+    const c = Color.parse('#ff0000')!.toHwb();
     expect(c.channelLabels()).toEqual(['hue', 'whiteness', 'blackness']);
   });
 
   test('HSV color returns hue/saturation/value labels', () => {
-    const c = (Color.parse('#ff0000')! as RGBColor).toHsv();
+    const c = Color.parse('#ff0000')!.toHsv();
     expect(c.channelLabels()).toEqual(['hue', 'saturation', 'value']);
   });
 
   test('XYZ50 color returns x/y/z labels', () => {
-    const c = (Color.parse('#ff0000')! as RGBColor).toXyz50();
+    const c = Color.parse('#ff0000')!.toXyz50();
     expect(c.channelLabels()).toEqual(['x', 'y', 'z']);
   });
 });
@@ -790,7 +790,7 @@ describe('getChannelLabels', () => {
   });
 
   test('leaves a/b untranslated in OkLab', () => {
-    const c = (Color.parse('#ff0000')! as RGBColor).toOklab();
+    const c = Color.parse('#ff0000')!.toOklab();
     const labels = getChannelLabels(c, 'es');
     expect(labels).toEqual(['Luminosidad', 'a', 'b']);
   });

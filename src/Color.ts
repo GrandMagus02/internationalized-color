@@ -3,12 +3,27 @@ import { convert } from './conversions/index.ts';
 import { parseColor as parseColorInput } from './parse.ts';
 import { formatHex, formatCss } from './format.ts';
 import { gamutMapToSrgb } from './gamut.ts';
+import type { RGBColor } from './spaces/rgb.ts';
+import type { HSLColor } from './spaces/hsl.ts';
+import type { HSVColor } from './spaces/hsv.ts';
+import type { HWBColor } from './spaces/hwb.ts';
+import type { OklabColor } from './spaces/oklab.ts';
+import type { OklchColor } from './spaces/oklch.ts';
+import type { LabColor } from './spaces/lab.ts';
+import type { LchColor } from './spaces/lch.ts';
+import type { P3Color } from './spaces/p3.ts';
+import type { A98Color } from './spaces/a98.ts';
+import type { ProphotoColor } from './spaces/prophoto.ts';
+import type { Rec2020Color } from './spaces/rec2020.ts';
+import type { XYZ50Color } from './spaces/xyz50.ts';
+import type { XYZ65Color } from './spaces/xyz65.ts';
+import type { LRGBColor } from './spaces/lrgb.ts';
 
 export abstract class Color {
   abstract readonly mode: ColorMode;
-  readonly alpha: number | undefined;
+  readonly alpha: number;
 
-  constructor(alpha?: number) {
+  constructor(alpha: number) {
     this.alpha = alpha;
   }
 
@@ -29,7 +44,7 @@ export abstract class Color {
   toArray(includeAlpha?: boolean): number[] {
     const ch = this.channels;
     const arr: number[] = [ch[0]!.value, ch[1]!.value, ch[2]!.value];
-    if (includeAlpha && this.alpha !== undefined) arr.push(this.alpha);
+    if (includeAlpha) arr.push(this.alpha);
     return arr;
   }
 
@@ -45,7 +60,7 @@ export abstract class Color {
   get(channel: string): number | undefined;
   get<T>(channel: string, defaultValue: T): number | T;
   get(channel: string, defaultValue?: unknown): unknown {
-    if (channel === 'alpha') return this.alpha ?? defaultValue;
+    if (channel === 'alpha') return this.alpha;
     const ch = this.channels.find(c => c.key === channel);
     if (ch) return ch.value;
     return defaultValue;
@@ -102,23 +117,23 @@ export abstract class Color {
   }
 
   // Conversion shorthands
-  toRgb(): Color { return this.to('rgb')!; }
-  toHsl(): Color { return this.to('hsl')!; }
-  toHsv(): Color { return this.to('hsv')!; }
-  toHwb(): Color { return this.to('hwb')!; }
-  toOklab(): Color { return this.to('oklab')!; }
-  toOklch(): Color { return this.to('oklch')!; }
-  toLab(): Color { return this.to('lab')!; }
-  toLch(): Color { return this.to('lch')!; }
-  toP3(): Color { return this.to('p3')!; }
-  toA98(): Color { return this.to('a98')!; }
-  toProphoto(): Color { return this.to('prophoto')!; }
-  toRec2020(): Color { return this.to('rec2020')!; }
-  toXyz50(): Color { return this.to('xyz50')!; }
-  toXyz65(): Color { return this.to('xyz65')!; }
-  toLrgb(): Color { return this.to('lrgb')!; }
+  toRgb(): RGBColor { return this.to('rgb')! as RGBColor; }
+  toHsl(): HSLColor { return this.to('hsl')! as HSLColor; }
+  toHsv(): HSVColor { return this.to('hsv')! as HSVColor; }
+  toHwb(): HWBColor { return this.to('hwb')! as HWBColor; }
+  toOklab(): OklabColor { return this.to('oklab')! as OklabColor; }
+  toOklch(): OklchColor { return this.to('oklch')! as OklchColor; }
+  toLab(): LabColor { return this.to('lab')! as LabColor; }
+  toLch(): LchColor { return this.to('lch')! as LchColor; }
+  toP3(): P3Color { return this.to('p3')! as P3Color; }
+  toA98(): A98Color { return this.to('a98')! as A98Color; }
+  toProphoto(): ProphotoColor { return this.to('prophoto')! as ProphotoColor; }
+  toRec2020(): Rec2020Color { return this.to('rec2020')! as Rec2020Color; }
+  toXyz50(): XYZ50Color { return this.to('xyz50')! as XYZ50Color; }
+  toXyz65(): XYZ65Color { return this.to('xyz65')! as XYZ65Color; }
+  toLrgb(): LRGBColor { return this.to('lrgb')! as LRGBColor; }
 
-  getAlpha(): number | undefined {
+  getAlpha(): number {
     return this.alpha;
   }
 
@@ -163,18 +178,14 @@ export abstract class Color {
     return formatCss(this.mode, this._values(), this.alpha);
   }
 
-  toJSON(): { mode: string; channels: Record<string, number>; alpha?: number } {
+  toJSON(): { mode: string; channels: Record<string, number>; alpha: number } {
     const keys = this._keys();
     const values = this._values();
     const channels: Record<string, number> = {};
     for (let i = 0; i < 3; i++) {
       channels[keys[i]!] = values[i]!;
     }
-    return {
-      mode: this.mode,
-      channels,
-      ...(this.alpha !== undefined ? { alpha: this.alpha } : {}),
-    };
+    return { mode: this.mode, channels, alpha: this.alpha };
   }
 
   toObject(): Record<string, unknown> {
@@ -184,7 +195,7 @@ export abstract class Color {
     for (let i = 0; i < 3; i++) {
       obj[keys[i]!] = values[i]!;
     }
-    if (this.alpha !== undefined) obj.alpha = this.alpha;
+    obj.alpha = this.alpha;
     return obj;
   }
 
@@ -194,7 +205,7 @@ export abstract class Color {
     return createColorInstance(result.mode, result.channels, result.alpha);
   }
 
-  static create(mode: ColorMode | string, channels: Record<string, number>, alpha?: number): Color {
+  static create(mode: ColorMode | string, channels: Record<string, number>): Color {
     const m = mode as ColorMode;
     const channelMap: Record<ColorMode, [string, string, string]> = {
       rgb: ['r', 'g', 'b'], hsl: ['h', 's', 'l'], hsv: ['h', 's', 'v'],
@@ -209,6 +220,7 @@ export abstract class Color {
       channels[names[1]] ?? 0,
       channels[names[2]] ?? 0,
     ];
+    const alpha = channels.alpha ?? 1;
     return createColorInstance(m, vals, alpha);
   }
 
@@ -224,12 +236,12 @@ export abstract class Color {
   }
 }
 
-let _factories: Record<ColorMode, (channels: [number, number, number], alpha?: number) => Color>;
+let _factories: Record<ColorMode, (channels: [number, number, number], alpha: number) => Color>;
 
-export function registerFactories(factories: Record<ColorMode, (channels: [number, number, number], alpha?: number) => Color>) {
+export function registerFactories(factories: Record<ColorMode, (channels: [number, number, number], alpha: number) => Color>) {
   _factories = factories;
 }
 
-export function createColorInstance(mode: ColorMode, channels: [number, number, number], alpha?: number): Color {
+export function createColorInstance(mode: ColorMode, channels: [number, number, number], alpha: number = 1): Color {
   return _factories[mode](channels, alpha);
 }

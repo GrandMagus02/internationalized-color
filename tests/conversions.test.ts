@@ -129,7 +129,7 @@ describe('Out-of-gamut handling', () => {
 });
 
 describe('Typed conversion methods', () => {
-  const red = () => Color.parse('#ff0000')! as RGBColor;
+  const red = () => Color.parse('#ff0000')!;
 
   test('toRgb() returns RGBColor', () => {
     const c = red().toOklch().toRgb();

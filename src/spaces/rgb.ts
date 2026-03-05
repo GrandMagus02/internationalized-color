@@ -1,20 +1,6 @@
 import { Color } from '../Color.ts';
 import type { ChannelDescriptor } from '../types.ts';
 import { parseColor as parseColorInput } from '../parse.ts';
-import type { HSLColor } from './hsl.ts';
-import type { HSVColor } from './hsv.ts';
-import type { HWBColor } from './hwb.ts';
-import type { OklabColor } from './oklab.ts';
-import type { OklchColor } from './oklch.ts';
-import type { LabColor } from './lab.ts';
-import type { LchColor } from './lch.ts';
-import type { P3Color } from './p3.ts';
-import type { A98Color } from './a98.ts';
-import type { ProphotoColor } from './prophoto.ts';
-import type { Rec2020Color } from './rec2020.ts';
-import type { XYZ50Color } from './xyz50.ts';
-import type { XYZ65Color } from './xyz65.ts';
-import type { LRGBColor } from './lrgb.ts';
 
 export class RGBColor extends Color {
   readonly mode = 'rgb' as const;
@@ -22,11 +8,12 @@ export class RGBColor extends Color {
   readonly g: number;
   readonly b: number;
 
-  constructor(r: number, g: number, b: number, alpha?: number) {
-    super(alpha);
-    this.r = r;
-    this.g = g;
-    this.b = b;
+  constructor(r?: number, g?: number, b?: number, alpha?: number) {
+    const hasChannels = r !== undefined || g !== undefined || b !== undefined;
+    super(alpha ?? (hasChannels ? 1 : 0));
+    this.r = r ?? 0;
+    this.g = g ?? 0;
+    this.b = b ?? 0;
   }
 
   get red() { return this.r; }
@@ -40,23 +27,6 @@ export class RGBColor extends Color {
       { key: 'b', value: this.b, type: 'percent', min: 0, max: 1, label: 'blue' },
     ];
   }
-
-  override toRgb(): RGBColor { return this.to('rgb')! as RGBColor; }
-  override toHsl(): HSLColor { return this.to('hsl')! as HSLColor; }
-  override toHsv(): HSVColor { return this.to('hsv')! as HSVColor; }
-  override toHwb(): HWBColor { return this.to('hwb')! as HWBColor; }
-  override toOklab(): OklabColor { return this.to('oklab')! as OklabColor; }
-  override toOklch(): OklchColor { return this.to('oklch')! as OklchColor; }
-  override toLab(): LabColor { return this.to('lab')! as LabColor; }
-  override toLch(): LchColor { return this.to('lch')! as LchColor; }
-  override toP3(): P3Color { return this.to('p3')! as P3Color; }
-  override toA98(): A98Color { return this.to('a98')! as A98Color; }
-  override toProphoto(): ProphotoColor { return this.to('prophoto')! as ProphotoColor; }
-  override toRec2020(): Rec2020Color { return this.to('rec2020')! as Rec2020Color; }
-  override toXyz50(): XYZ50Color { return this.to('xyz50')! as XYZ50Color; }
-  override toXyz65(): XYZ65Color { return this.to('xyz65')! as XYZ65Color; }
-  override toLrgb(): LRGBColor { return this.to('lrgb')! as LRGBColor; }
-
   getRed(): number { return this.r; }
   setRed(value: number): RGBColor { return new RGBColor(value, this.g, this.b, this.alpha); }
   getGreen(): number { return this.g; }
@@ -64,7 +34,7 @@ export class RGBColor extends Color {
   getBlue(): number { return this.b; }
   setBlue(value: number): RGBColor { return new RGBColor(this.r, this.g, value, this.alpha); }
 
-  static parse(value: string): RGBColor | undefined {
+  static override parse(value: string): RGBColor | undefined {
     const result = parseColorInput(value);
     if (!result || result.mode !== 'rgb') return undefined;
     return new RGBColor(result.channels[0], result.channels[1], result.channels[2], result.alpha);

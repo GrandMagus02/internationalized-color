@@ -16,7 +16,7 @@ import { XYZ50Color } from './xyz50.ts';
 import { XYZ65Color } from './xyz65.ts';
 import { LRGBColor } from './lrgb.ts';
 
-const factories: Record<ColorMode, (channels: [number, number, number], alpha?: number) => Color> = {
+const factories: Record<ColorMode, (channels: [number, number, number], alpha: number) => Color> = {
   rgb: (c, a) => new RGBColor(c[0], c[1], c[2], a),
   hsl: (c, a) => new HSLColor(c[0], c[1], c[2], a),
   hsv: (c, a) => new HSVColor(c[0], c[1], c[2], a),
